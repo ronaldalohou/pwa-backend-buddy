@@ -45,6 +45,8 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string | null
+          credit_limit: number | null
+          current_credit: number | null
           email: string | null
           id: string
           loyalty_points: number | null
@@ -56,6 +58,8 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string | null
+          credit_limit?: number | null
+          current_credit?: number | null
           email?: string | null
           id?: string
           loyalty_points?: number | null
@@ -67,6 +71,8 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string | null
+          credit_limit?: number | null
+          current_credit?: number | null
           email?: string | null
           id?: string
           loyalty_points?: number | null
@@ -76,6 +82,54 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: Database["public"]["Enums"]["payment_method_type"]
+          sale_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method: Database["public"]["Enums"]["payment_method_type"]
+          sale_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method_type"]
+          sale_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -92,6 +146,7 @@ export type Database = {
           price: number
           sku: string | null
           stock_quantity: number | null
+          supplier_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -108,6 +163,7 @@ export type Database = {
           price: number
           sku?: string | null
           stock_quantity?: number | null
+          supplier_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -124,6 +180,7 @@ export type Database = {
           price?: number
           sku?: string | null
           stock_quantity?: number | null
+          supplier_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -132,6 +189,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -213,42 +277,54 @@ export type Database = {
       }
       sales: {
         Row: {
+          amount_paid: number | null
+          amount_remaining: number | null
           cashier_id: string | null
           created_at: string | null
           customer_id: string | null
           discount: number | null
           id: string
           notes: string | null
-          payment_method: string
-          payment_status: string | null
+          payment_method: Database["public"]["Enums"]["payment_method_type"]
+          payment_status:
+            | Database["public"]["Enums"]["payment_status_type"]
+            | null
           sale_number: string
           subtotal: number
           tax: number | null
           total: number
         }
         Insert: {
+          amount_paid?: number | null
+          amount_remaining?: number | null
           cashier_id?: string | null
           created_at?: string | null
           customer_id?: string | null
           discount?: number | null
           id?: string
           notes?: string | null
-          payment_method: string
-          payment_status?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method_type"]
+          payment_status?:
+            | Database["public"]["Enums"]["payment_status_type"]
+            | null
           sale_number: string
           subtotal: number
           tax?: number | null
           total: number
         }
         Update: {
+          amount_paid?: number | null
+          amount_remaining?: number | null
           cashier_id?: string | null
           created_at?: string | null
           customer_id?: string | null
           discount?: number | null
           id?: string
           notes?: string | null
-          payment_method?: string
-          payment_status?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method_type"]
+          payment_status?:
+            | Database["public"]["Enums"]["payment_status_type"]
+            | null
           sale_number?: string
           subtotal?: number
           tax?: number | null
@@ -319,6 +395,84 @@ export type Database = {
           },
         ]
       }
+      store_settings: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          currency: Database["public"]["Enums"]["currency_code"] | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          phone: string | null
+          receipt_footer: string | null
+          store_name: string
+          tax_rate: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          currency?: Database["public"]["Enums"]["currency_code"] | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          receipt_footer?: string | null
+          store_name: string
+          tax_rate?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          currency?: Database["public"]["Enums"]["currency_code"] | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          receipt_footer?: string | null
+          store_name?: string
+          tax_rate?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -330,6 +484,15 @@ export type Database = {
       }
     }
     Enums: {
+      currency_code: "XOF" | "XAF" | "NGN" | "GHS" | "MAD"
+      payment_method_type:
+        | "cash"
+        | "mtn_money"
+        | "moov_money"
+        | "orange_money"
+        | "credit"
+        | "card"
+      payment_status_type: "completed" | "pending" | "partial" | "credit"
       user_role: "caissier" | "manager" | "admin"
     }
     CompositeTypes: {
@@ -458,6 +621,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      currency_code: ["XOF", "XAF", "NGN", "GHS", "MAD"],
+      payment_method_type: [
+        "cash",
+        "mtn_money",
+        "moov_money",
+        "orange_money",
+        "credit",
+        "card",
+      ],
+      payment_status_type: ["completed", "pending", "partial", "credit"],
       user_role: ["caissier", "manager", "admin"],
     },
   },
