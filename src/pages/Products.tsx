@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Search, Package, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Search, Package, AlertTriangle, Trash2, Boxes } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,6 +30,7 @@ const Products = () => {
     min_stock_level: "10",
     barcode: "",
     sku: "",
+    tax_rate: "18",
   });
 
   useEffect(() => {
@@ -63,6 +64,7 @@ const Products = () => {
       cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
       stock_quantity: parseInt(formData.stock_quantity),
       min_stock_level: parseInt(formData.min_stock_level),
+      tax_rate: parseFloat(formData.tax_rate),
     });
 
     if (error) {
@@ -82,7 +84,24 @@ const Products = () => {
       min_stock_level: "10",
       barcode: "",
       sku: "",
+      tax_rate: "18",
     });
+    loadData();
+  };
+
+  const handleDelete = async (productId: string, productName: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${productName}" ?`)) {
+      return;
+    }
+
+    const { error } = await supabase.from("products").delete().eq("id", productId);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression du produit");
+      return;
+    }
+
+    toast.success("Produit supprimé avec succès");
     loadData();
   };
 
@@ -200,6 +219,15 @@ const Products = () => {
                       onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>TVA (%)</Label>
+                    <Input
+                      type="number"
+                      value={formData.tax_rate}
+                      onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
+                      step="0.01"
+                    />
+                  </div>
                 </div>
                 <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary">
                   Ajouter le produit
@@ -252,11 +280,17 @@ const Products = () => {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Prix</span>
+                    <span className="text-sm text-muted-foreground">Prix HT</span>
                     <span className="font-bold text-primary">
                       {formatCurrency(Number(product.price), currency as any)}
                     </span>
                   </div>
+                  {product.tax_rate && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">TVA</span>
+                      <span className="text-sm font-medium">{product.tax_rate}%</span>
+                    </div>
+                  )}
                   {margin && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Marge</span>
@@ -276,6 +310,25 @@ const Products = () => {
                       <span>{product.sku}</span>
                     </div>
                   )}
+                  <div className="pt-2 border-t flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/stock-movements?product=${product.id}`)}
+                      className="flex-1"
+                    >
+                      <Boxes className="w-4 h-4 mr-1" />
+                      Stock
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(product.id, product.name)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );

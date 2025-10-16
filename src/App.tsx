@@ -9,7 +9,10 @@ import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
+import StockMovements from "./pages/StockMovements";
 import NotFound from "./pages/NotFound";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const queryClient = new QueryClient();
 
@@ -22,10 +25,61 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/pos" element={<POS />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/customers" element={<Customers />} />
+          <Route
+            path="/dashboard"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Dashboard />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/pos"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <POS />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Products />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/customers"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Customers />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/stock-movements"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <StockMovements />
+                </div>
+              </SidebarProvider>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
