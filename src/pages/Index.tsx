@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Sparkles, TrendingUp, Shield, Zap, Users, Globe } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, Shield, Zap, Users, Globe, Check } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [plans, setPlans] = useState<any[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -14,6 +16,17 @@ const Index = () => {
         navigate("/dashboard");
       }
     });
+
+    // Fetch subscription plans
+    const fetchPlans = async () => {
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      if (data) setPlans(data);
+    };
+    fetchPlans();
   }, [navigate]);
 
   const features = [
@@ -41,11 +54,6 @@ const Index = () => {
       icon: <Shield className="w-6 h-6" />,
       title: "Sécurisé",
       description: "Vos données protégées et sauvegardées"
-    },
-    {
-      icon: <Sparkles className="w-6 h-6" />,
-      title: "Interface moderne",
-      description: "Design intuitif et adapté aux écrans tactiles"
     }
   ];
 
@@ -55,16 +63,22 @@ const Index = () => {
       <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg">
-              <ShoppingBag className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo.png" alt="AfriCaisse" className="w-10 h-10" />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               AfriCaisse
             </span>
           </div>
-          <Button variant="outline" onClick={() => navigate("/auth")}>
-            Se connecter
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => navigate("/auth")}>
+              Se connecter
+            </Button>
+            <Button 
+              onClick={() => navigate("/auth?signup=true")}
+              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+            >
+              S'inscrire
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -72,20 +86,22 @@ const Index = () => {
         {/* Hero */}
         <section className="container mx-auto px-4 py-20 text-center">
           <div className="mx-auto max-w-3xl space-y-8">
-            <div className="mx-auto bg-gradient-to-br from-primary to-secondary p-8 rounded-3xl w-32 h-32 flex items-center justify-center shadow-2xl animate-pulse">
-              <ShoppingBag className="w-16 h-16 text-white" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="AfriCaisse Logo" 
+              className="mx-auto w-32 h-32 animate-pulse"
+            />
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
               Gérez votre commerce avec simplicité
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Solution de point de vente moderne, conçue pour les commerces africains. 
+              Solution de point de vente moderne, conçue pour les commerces béninois et africains. 
               Multi-devises, Mobile Money, et gestion complète de votre activité.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button 
                 size="lg"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/auth?signup=true")}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-lg px-8 py-6"
               >
                 Commencer gratuitement
@@ -96,7 +112,7 @@ const Index = () => {
                 onClick={() => navigate("/auth")}
                 className="border-2 text-lg px-8 py-6"
               >
-                Voir la démo
+                Se connecter
               </Button>
             </div>
           </div>
@@ -125,6 +141,72 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Pricing */}
+        <section className="container mx-auto px-4 py-20">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-accent text-accent-foreground">
+              1er mois gratuit
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">Choisissez votre plan</h2>
+            <p className="text-muted-foreground text-lg">
+              Commencez gratuitement et évoluez selon vos besoins
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {plans.map((plan, index) => {
+              const features = plan.features || [];
+              const isFree = plan.price === 0;
+              return (
+                <Card 
+                  key={plan.id} 
+                  className={`relative border-2 hover:shadow-2xl transition-all ${
+                    index === 1 ? 'scale-105 border-primary' : ''
+                  }`}
+                >
+                  {index === 1 && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-accent text-accent-foreground">
+                        Populaire
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div className="pt-4">
+                      <span className="text-4xl font-bold">
+                        {isFree ? "Gratuit" : `${plan.price.toLocaleString()} FCFA`}
+                      </span>
+                      {!isFree && <span className="text-muted-foreground">/{plan.duration_days} jours</span>}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      onClick={() => navigate("/auth?signup=true")}
+                      className={`w-full ${
+                        index === 1 
+                          ? 'bg-gradient-to-r from-primary to-secondary hover:opacity-90' 
+                          : ''
+                      }`}
+                      variant={index === 1 ? "default" : "outline"}
+                    >
+                      Commencer
+                    </Button>
+                    <ul className="space-y-3">
+                      {features.map((feature: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="container mx-auto px-4 py-20">
           <Card className="border-2 bg-gradient-to-r from-primary/10 to-secondary/10">
@@ -136,7 +218,7 @@ const Index = () => {
               </p>
               <Button 
                 size="lg"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/auth?signup=true")}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-lg px-8 py-6"
               >
                 Créer mon compte maintenant

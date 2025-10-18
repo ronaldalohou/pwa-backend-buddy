@@ -1,20 +1,24 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ShoppingBag } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(searchParams.get("signup") === "true");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [ifu, setIfu] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -38,19 +42,36 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               full_name: fullName,
+              business_name: businessName,
+              phone: phone,
+              ifu: ifu || null,
             },
             emailRedirectTo: `${window.location.origin}/dashboard`,
           },
         });
 
         if (error) throw error;
-        toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+        
+        if (data.user) {
+          // Create a trial subscription for new users
+          const trialEndDate = new Date();
+          trialEndDate.setDate(trialEndDate.getDate() + 30);
+
+          await supabase.from("subscriptions").insert({
+            user_id: data.user.id,
+            status: "trial",
+            is_trial: true,
+            end_date: trialEndDate.toISOString(),
+          });
+        }
+
+        toast.success("Compte créé ! Veuillez vérifier votre email pour confirmer votre compte.");
         setIsSignUp(false);
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -72,8 +93,8 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
       <Card className="w-full max-w-md shadow-2xl border-2">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto bg-gradient-to-br from-primary to-secondary p-4 rounded-2xl w-16 h-16 flex items-center justify-center">
-            <ShoppingBag className="w-8 h-8 text-white" />
+          <div className="mx-auto">
+            <img src="/logo.png" alt="AfriCaisse" className="w-16 h-16 mx-auto" />
           </div>
           <div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -87,21 +108,58 @@ const Auth = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nom complet</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Jean Dupont"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="border-2"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Nom complet *</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Jean Dupont"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessName">Nom du commerce/entreprise *</Label>
+                  <Input
+                    id="businessName"
+                    type="text"
+                    placeholder="Boutique Jean"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    required
+                    className="border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Numéro de téléphone *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+229 XX XX XX XX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    className="border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ifu">IFU (optionnel)</Label>
+                  <Input
+                    id="ifu"
+                    type="text"
+                    placeholder="3202300000000"
+                    value={ifu}
+                    onChange={(e) => setIfu(e.target.value)}
+                    className="border-2"
+                  />
+                </div>
+              </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -113,7 +171,7 @@ const Auth = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">Mot de passe *</Label>
               <Input
                 id="password"
                 type="password"

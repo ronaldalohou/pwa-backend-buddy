@@ -55,6 +55,11 @@ const menuItems = [
     url: "/analytics",
     icon: BarChart3,
   },
+  {
+    title: "Paramètres",
+    url: "/settings",
+    icon: Settings,
+  },
 ];
 
 export function AppSidebar() {

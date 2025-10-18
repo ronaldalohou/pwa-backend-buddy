@@ -241,25 +241,31 @@ export type Database = {
       }
       profiles: {
         Row: {
+          business_name: string | null
           created_at: string | null
           full_name: string
           id: string
+          ifu: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
         Insert: {
+          business_name?: string | null
           created_at?: string | null
           full_name: string
           id: string
+          ifu?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
         Update: {
+          business_name?: string | null
           created_at?: string | null
           full_name?: string
           id?: string
+          ifu?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
@@ -475,6 +481,83 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_days: number
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_days: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price?: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_days?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          is_trial: boolean | null
+          plan_id: string | null
+          start_date: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          is_trial?: boolean | null
+          plan_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          is_trial?: boolean | null
+          plan_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppliers: {
         Row: {

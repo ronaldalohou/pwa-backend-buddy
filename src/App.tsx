@@ -11,6 +11,7 @@ import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import StockMovements from "./pages/StockMovements";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -88,6 +89,17 @@ const App = () => (
                 <div className="min-h-screen flex w-full">
                   <AppSidebar />
                   <Analytics />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Settings />
                 </div>
               </SidebarProvider>
             }
