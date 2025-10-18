@@ -10,6 +10,7 @@ import POS from "./pages/POS";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import StockMovements from "./pages/StockMovements";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -76,6 +77,17 @@ const App = () => (
                 <div className="min-h-screen flex w-full">
                   <AppSidebar />
                   <StockMovements />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Analytics />
                 </div>
               </SidebarProvider>
             }
