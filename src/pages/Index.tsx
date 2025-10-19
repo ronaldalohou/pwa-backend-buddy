@@ -63,9 +63,9 @@ const Index = () => {
       <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="AfriCaisse" className="w-10 h-10" />
+            <img src="/logo.png" alt="africaisse" className="w-10 h-10" />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              AfriCaisse
+              africaisse
             </span>
           </div>
           <div className="flex gap-3">
@@ -88,7 +88,7 @@ const Index = () => {
           <div className="mx-auto max-w-3xl space-y-8">
             <img 
               src="/logo.png" 
-              alt="AfriCaisse Logo" 
+              alt="africaisse Logo" 
               className="mx-auto w-32 h-32 animate-pulse"
             />
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
@@ -213,7 +213,7 @@ const Index = () => {
             <CardContent className="p-12 text-center space-y-6">
               <h2 className="text-3xl font-bold">Prêt à démarrer ?</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Rejoignez des centaines de commerces qui utilisent déjà AfriCaisse 
+                Rejoignez des centaines de commerces qui utilisent déjà africaisse 
                 pour gérer leurs ventes au quotidien.
               </p>
               <Button 
@@ -231,7 +231,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t bg-card/50 backdrop-blur-sm mt-20">
         <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">
-          <p>© 2025 AfriCaisse. Conçu pour l'Afrique, par des Africains.</p>
+          <p>© 2025 africaisse. Conçu pour l'Afrique, par des Africains.</p>
         </div>
       </footer>
     </div>

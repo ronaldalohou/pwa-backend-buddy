@@ -157,7 +157,7 @@ const Dashboard = () => {
             <img src="/logo.png" alt="Logo" className="w-10 h-10" />
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                {profile?.business_name || "AfriCaisse POS"}
+                {profile?.business_name || "africaisse POS"}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Bienvenue, {profile?.full_name}

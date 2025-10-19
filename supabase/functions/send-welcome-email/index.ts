@@ -26,9 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending welcome email to:", email);
 
     const emailResponse = await resend.emails.send({
-      from: "AfriCaisse <onboarding@resend.dev>",
+      from: "africaisse <onboarding@resend.dev>",
       to: [email],
-      subject: "Bienvenue sur AfriCaisse ! 🇧🇯",
+      subject: "Bienvenue sur africaisse ! 🇧🇯",
       html: `
         <!DOCTYPE html>
         <html>
@@ -124,17 +124,17 @@ const handler = async (req: Request): Promise<Response> => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🇧🇯 AfriCaisse POS</h1>
+              <h1>🇧🇯 africaisse POS</h1>
             </div>
             <div class="content">
               <h2>Bienvenue ${fullName} ! 👋</h2>
-              <p>Nous sommes ravis de vous accueillir sur <strong>AfriCaisse</strong>, votre solution de caisse moderne adaptée aux commerces du Bénin.</p>
+              <p>Nous sommes ravis de vous accueillir sur <strong>africaisse</strong>, votre solution de caisse moderne adaptée aux commerces du Bénin.</p>
               
               <div class="trial-badge">
                 ✨ 30 jours d'essai gratuit activés
               </div>
               
-              <p>Votre commerce <strong>${businessName}</strong> est maintenant prêt à bénéficier de toutes les fonctionnalités d'AfriCaisse :</p>
+              <p>Votre commerce <strong>${businessName}</strong> est maintenant prêt à bénéficier de toutes les fonctionnalités d'africaisse :</p>
               
               <div class="features">
                 <div class="feature">
@@ -163,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
               </div>
               
-              <p>Votre email a été confirmé avec succès. Vous pouvez maintenant vous connecter et commencer à utiliser AfriCaisse.</p>
+              <p>Votre email a été confirmé avec succès. Vous pouvez maintenant vous connecter et commencer à utiliser africaisse.</p>
               
               <center>
                 <a href="${Deno.env.get("VITE_SUPABASE_URL")?.replace("supabase.co", "lovable.app") || "#"}/auth" class="cta-button">
@@ -177,9 +177,9 @@ const handler = async (req: Request): Promise<Response> => {
               </p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} AfriCaisse - Solution POS pour le Bénin 🇧🇯</p>
+              <p>© ${new Date().getFullYear()} africaisse - Solution POS pour le Bénin 🇧🇯</p>
               <p style="margin-top: 8px; font-size: 12px;">
-                Cet email a été envoyé suite à votre inscription sur AfriCaisse.<br>
+                Cet email a été envoyé suite à votre inscription sur africaisse.<br>
                 Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer ce message.
               </p>
             </div>

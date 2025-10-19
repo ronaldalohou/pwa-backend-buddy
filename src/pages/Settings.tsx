@@ -123,6 +123,20 @@ const Settings = () => {
               </div>
             ) : subscription ? (
               <>
+                {subscription.is_trial && (
+                  <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-2 border-green-500/30 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">✨</span>
+                      <p className="text-lg font-bold text-green-700 dark:text-green-400">
+                        Période d'essai gratuite de 30 jours !
+                      </p>
+                    </div>
+                    <p className="text-sm text-green-600 dark:text-green-300">
+                      Profitez de toutes les fonctionnalités gratuitement pendant votre période d'essai.
+                    </p>
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
@@ -138,7 +152,7 @@ const Settings = () => {
                 {getDaysRemaining !== null && getDaysRemaining > 0 && (
                   <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
                     <p className="text-sm font-medium text-primary">
-                      {getDaysRemaining} jour{getDaysRemaining > 1 ? "s" : ""} restant{getDaysRemaining > 1 ? "s" : ""}
+                      ⏰ {getDaysRemaining} jour{getDaysRemaining > 1 ? "s" : ""} restant{getDaysRemaining > 1 ? "s" : ""}
                     </p>
                   </div>
                 )}

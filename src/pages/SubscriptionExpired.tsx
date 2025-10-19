@@ -22,7 +22,7 @@ const SubscriptionExpired = () => {
 
   const handleContactWhatsApp = () => {
     const phoneNumber = "41779975241";
-    const message = encodeURIComponent("Bonjour, je souhaite renouveler mon abonnement AfriCaisse.");
+    const message = encodeURIComponent("Bonjour, je souhaite renouveler mon abonnement africaisse.");
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
   };
 
@@ -83,7 +83,7 @@ const SubscriptionExpired = () => {
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              Équipe AfriCaisse - Support disponible 7j/7
+              Équipe africaisse - Support disponible 7j/7
             </p>
           </div>
         </CardContent>

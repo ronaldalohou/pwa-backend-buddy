@@ -158,11 +158,11 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-2xl border-2">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto">
-            <img src="/logo.png" alt="AfriCaisse" className="w-16 h-16 mx-auto" />
+            <img src="/logo.png" alt="africaisse" className="w-16 h-16 mx-auto" />
           </div>
           <div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              AfriCaisse POS
+              africaisse POS
             </CardTitle>
             <CardDescription className="text-base mt-2">
               {isSignUp ? "Créer un nouveau compte - 30 jours gratuits" : "Connectez-vous à votre compte"}

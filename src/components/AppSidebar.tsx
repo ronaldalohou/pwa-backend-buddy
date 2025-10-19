@@ -136,7 +136,7 @@ export function AppSidebar() {
           <img src="/logo.png" alt="Logo" className="w-8 h-8 flex-shrink-0" />
           {open && (
             <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
-              {businessName || "AfriCaisse"}
+              {businessName || "africaisse"}
             </span>
           )}
         </div>
