@@ -8,16 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Edit, Trash2, CreditCard } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Plus, Edit, Trash2, CreditCard, Wallet, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, CurrencyCode } from "@/utils/currency";
 import { customerSchema } from "@/lib/validations";
+import { format } from "date-fns";
 
 const Customers = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<any[]>([]);
+  const [creditSales, setCreditSales] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
   const [currency, setCurrency] = useState<CurrencyCode>("XOF");
   const [formData, setFormData] = useState({
     name: "",
@@ -36,6 +42,7 @@ const Customers = () => {
 
     loadCustomers();
     loadSettings();
+    loadCreditSales();
   }, [navigate]);
 
   const loadSettings = async () => {
@@ -49,6 +56,94 @@ const Customers = () => {
       .select("*")
       .order("name");
     if (data) setCustomers(data);
+  };
+
+  const loadCreditSales = async () => {
+    const { data } = await supabase
+      .from("sales")
+      .select(`
+        *,
+        customers:customer_id (
+          id,
+          name,
+          current_credit
+        )
+      `)
+      .in("payment_status", ["credit", "partial"])
+      .order("created_at", { ascending: false });
+    if (data) setCreditSales(data);
+  };
+
+  const handlePayment = async () => {
+    if (!selectedSale || !paymentAmount) return;
+
+    const amount = parseFloat(paymentAmount);
+    if (amount <= 0 || amount > selectedSale.amount_remaining) {
+      toast.error("Montant invalide");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const newAmountPaid = selectedSale.amount_paid + amount;
+    const newAmountRemaining = selectedSale.amount_remaining - amount;
+    const newStatus = newAmountRemaining === 0 ? "completed" : "partial";
+
+    // Get current customer credit
+    const { data: customerData } = await supabase
+      .from("customers")
+      .select("current_credit")
+      .eq("id", selectedSale.customer_id)
+      .single();
+
+    if (!customerData) {
+      toast.error("Client introuvable");
+      return;
+    }
+
+    // Update sale
+    const { error: saleError } = await supabase
+      .from("sales")
+      .update({
+        amount_paid: newAmountPaid,
+        amount_remaining: newAmountRemaining,
+        payment_status: newStatus,
+      })
+      .eq("id", selectedSale.id);
+
+    if (saleError) {
+      toast.error("Erreur lors de la mise à jour");
+      return;
+    }
+
+    // Update customer credit
+    const { error: customerError } = await supabase
+      .from("customers")
+      .update({
+        current_credit: customerData.current_credit - amount,
+      })
+      .eq("id", selectedSale.customer_id);
+
+    if (customerError) {
+      toast.error("Erreur lors de la mise à jour du crédit");
+      return;
+    }
+
+    // Record payment
+    await supabase.from("payments").insert({
+      sale_id: selectedSale.id,
+      amount: amount,
+      payment_method: "cash",
+      created_by: user.id,
+    });
+
+    toast.success("Paiement enregistré avec succès");
+    setIsPaymentDialogOpen(false);
+    setPaymentAmount("");
+    setSelectedSale(null);
+    loadCreditSales();
+    loadCustomers();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,57 +257,144 @@ const Customers = () => {
       </header>
 
       <div className="container mx-auto p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Liste des clients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Téléphone</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="text-right">Crédit actuel</TableHead>
-                  <TableHead className="text-right">Limite crédit</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>{customer.phone || "-"}</TableCell>
-                    <TableCell>{customer.email || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={customer.current_credit > 0 ? "destructive" : "secondary"}>
-                        {formatCurrency(customer.current_credit || 0, currency)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(customer.credit_limit || 0, currency)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => handleEdit(customer)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive"
-                          onClick={() => handleDelete(customer.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="clients" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="clients">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Clients
+            </TabsTrigger>
+            <TabsTrigger value="credits">
+              <Wallet className="w-4 h-4 mr-2" />
+              Gestion des Crédits
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="clients" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Liste des clients</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Téléphone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-right">Crédit actuel</TableHead>
+                      <TableHead className="text-right">Limite crédit</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell className="font-medium">{customer.name}</TableCell>
+                        <TableCell>{customer.phone || "-"}</TableCell>
+                        <TableCell>{customer.email || "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={customer.current_credit > 0 ? "destructive" : "secondary"}>
+                            {formatCurrency(customer.current_credit || 0, currency)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(customer.credit_limit || 0, currency)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="icon" variant="ghost" onClick={() => handleEdit(customer)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => handleDelete(customer.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="credits" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ventes à crédit en attente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {creditSales.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Wallet className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Aucune vente à crédit en attente</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>N° Vente</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">Payé</TableHead>
+                        <TableHead className="text-right">Reste</TableHead>
+                        <TableHead className="text-center">Statut</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {creditSales.map((sale) => (
+                        <TableRow key={sale.id}>
+                          <TableCell className="font-medium">{sale.sale_number}</TableCell>
+                          <TableCell>{sale.customers?.name || "N/A"}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="w-3 h-3" />
+                              {format(new Date(sale.created_at), "dd/MM/yyyy")}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(sale.total, currency)}
+                          </TableCell>
+                          <TableCell className="text-right text-green-600">
+                            {formatCurrency(sale.amount_paid, currency)}
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-destructive">
+                            {formatCurrency(sale.amount_remaining, currency)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant={sale.payment_status === "credit" ? "destructive" : "secondary"}>
+                              {sale.payment_status === "credit" ? "Crédit" : "Partiel"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSale(sale);
+                                setPaymentAmount("");
+                                setIsPaymentDialogOpen(true);
+                              }}
+                            >
+                              <Wallet className="w-4 h-4 mr-1" />
+                              Encaisser
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -291,6 +473,75 @@ const Customers = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enregistrer un paiement</DialogTitle>
+          </DialogHeader>
+
+          {selectedSale && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Vente:</span>
+                  <span className="font-medium">{selectedSale.sale_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Client:</span>
+                  <span className="font-medium">{selectedSale.customers?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total:</span>
+                  <span className="font-medium">{formatCurrency(selectedSale.total, currency)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Déjà payé:</span>
+                  <span className="font-medium text-green-600">
+                    {formatCurrency(selectedSale.amount_paid, currency)}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="font-medium">Reste à payer:</span>
+                  <span className="font-bold text-lg text-destructive">
+                    {formatCurrency(selectedSale.amount_remaining, currency)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Montant à encaisser</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  max={selectedSale.amount_remaining}
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  placeholder="Entrer le montant"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsPaymentDialogOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handlePayment}
+                  disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
+                >
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
