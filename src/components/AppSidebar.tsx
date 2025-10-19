@@ -16,6 +16,9 @@ import {
   FileText,
   TrendingUp,
   Shield,
+  PackagePlus,
+  Receipt,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   Sidebar,
@@ -53,6 +56,11 @@ const menuItems = [
     icon: Package,
   },
   {
+    title: "Ajouter produit",
+    url: "/products?add=true",
+    icon: PackagePlus,
+  },
+  {
     title: "Catégories",
     url: "/categories",
     icon: Tag,
@@ -63,14 +71,24 @@ const menuItems = [
     icon: Building2,
   },
   {
-    title: "Stock faible",
+    title: "Alertes de stock",
     url: "/low-stock",
     icon: AlertTriangle,
+  },
+  {
+    title: "Mouvements",
+    url: "/stock-movements",
+    icon: ArrowRightLeft,
   },
   {
     title: "Clients",
     url: "/customers",
     icon: Users,
+  },
+  {
+    title: "Dépenses",
+    url: "/expenses",
+    icon: Receipt,
   },
   {
     title: "Rapports",
@@ -81,11 +99,6 @@ const menuItems = [
     title: "Clôture caisse",
     url: "/cash-report",
     icon: FileText,
-  },
-  {
-    title: "Mouvements stock",
-    url: "/stock-movements",
-    icon: TrendingUp,
   },
   {
     title: "Paramètres",

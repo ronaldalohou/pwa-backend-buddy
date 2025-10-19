@@ -64,17 +64,18 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="africaisse" className="w-10 h-10" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:block">
               africaisse
             </span>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate("/auth")}>
-              Se connecter
+          <div className="flex gap-2 sm:gap-3">
+            <Button variant="outline" size="sm" className="sm:size-default" onClick={() => navigate("/auth")}>
+              Connexion
             </Button>
             <Button 
+              size="sm"
+              className="sm:size-default bg-gradient-to-r from-primary to-secondary hover:opacity-90"
               onClick={() => navigate("/auth?signup=true")}
-              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
             >
               S'inscrire
             </Button>
@@ -210,16 +211,16 @@ const Index = () => {
         {/* CTA Section */}
         <section className="container mx-auto px-4 py-20">
           <Card className="border-2 bg-gradient-to-r from-primary/10 to-secondary/10">
-            <CardContent className="p-12 text-center space-y-6">
-              <h2 className="text-3xl font-bold">Prêt à démarrer ?</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <CardContent className="p-6 sm:p-12 text-center space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold">Prêt à démarrer ?</h2>
+              <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto">
                 Rejoignez des centaines de commerces qui utilisent déjà africaisse 
                 pour gérer leurs ventes au quotidien.
               </p>
               <Button 
                 size="lg"
                 onClick={() => navigate("/auth?signup=true")}
-                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-lg px-8 py-6"
+                className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6"
               >
                 Créer mon compte maintenant
               </Button>
