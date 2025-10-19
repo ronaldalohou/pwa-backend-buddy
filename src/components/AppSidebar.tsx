@@ -88,10 +88,16 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { open } = useSidebar();
+  const { open, setOpenMobile, isMobile } = useSidebar();
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState<string>("");
   const { isAdmin } = useUserRole();
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   useEffect(() => {
     fetchBusinessName();
@@ -145,6 +151,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
+                      onClick={handleNavClick}
                       className={({ isActive }) =>
                         isActive
                           ? "bg-primary/10 text-primary font-medium"
@@ -171,6 +178,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to="/admin"
+                      onClick={handleNavClick}
                       className={({ isActive }) =>
                         isActive
                           ? "bg-primary/10 text-primary font-medium"
