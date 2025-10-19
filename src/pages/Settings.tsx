@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, User, Building2, Phone, FileText, Mail } from "lucide-react";
+import { Loader2, User, Building2, Phone, FileText, Mail, Calendar, CreditCard } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +18,7 @@ const Settings = () => {
   const [phone, setPhone] = useState("");
   const [ifu, setIfu] = useState("");
   const [email, setEmail] = useState("");
+  const { subscription, loading: subLoading, getDaysRemaining } = useSubscription();
 
   useEffect(() => {
     fetchProfile();
@@ -73,6 +76,20 @@ const Settings = () => {
     toast.success("Déconnexion réussie");
   };
 
+  const getSubscriptionBadge = () => {
+    if (!subscription) return null;
+    
+    const badgeConfig = {
+      trial: { label: "Essai gratuit", variant: "default" as const },
+      active: { label: "Actif", variant: "default" as const },
+      expired: { label: "Expiré", variant: "destructive" as const },
+      cancelled: { label: "Annulé", variant: "secondary" as const },
+    };
+    
+    const config = badgeConfig[subscription.status];
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="container max-w-4xl mx-auto p-6 space-y-6">
@@ -84,6 +101,63 @@ const Settings = () => {
             Gérez vos informations personnelles et votre compte
           </p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Abonnement
+              </CardTitle>
+              {getSubscriptionBadge()}
+            </div>
+            <CardDescription>
+              Statut et détails de votre abonnement
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {subLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Chargement...
+              </div>
+            ) : subscription ? (
+              <>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {subscription.status === "expired" ? "Expiré le" : "Expire le"} :{" "}
+                  </span>
+                  <span className="font-medium">
+                    {subscription.end_date 
+                      ? new Date(subscription.end_date).toLocaleDateString("fr-FR")
+                      : "N/A"}
+                  </span>
+                </div>
+                
+                {getDaysRemaining !== null && getDaysRemaining > 0 && (
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+                    <p className="text-sm font-medium text-primary">
+                      {getDaysRemaining} jour{getDaysRemaining > 1 ? "s" : ""} restant{getDaysRemaining > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                )}
+                
+                {subscription.status === "expired" && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                    <p className="text-sm font-medium text-destructive">
+                      Votre abonnement a expiré. Renouvelez-le pour continuer à utiliser l'application.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Aucun abonnement trouvé
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
