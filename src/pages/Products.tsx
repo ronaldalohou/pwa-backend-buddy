@@ -58,8 +58,15 @@ const Products = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Utilisateur non connecté");
+      return;
+    }
+
     const { error } = await supabase.from("products").insert({
       ...formData,
+      user_id: user.id,
       price: parseFloat(formData.price),
       cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
       stock_quantity: parseInt(formData.stock_quantity),

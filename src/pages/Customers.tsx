@@ -54,6 +54,12 @@ const Customers = () => {
     e.preventDefault();
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Utilisateur non connecté");
+        return;
+      }
+
       if (editingCustomer) {
         const { error } = await supabase
           .from("customers")
@@ -65,7 +71,7 @@ const Customers = () => {
       } else {
         const { error } = await supabase
           .from("customers")
-          .insert([formData]);
+          .insert([{ ...formData, user_id: user.id }]);
         
         if (error) throw error;
         toast.success("Client ajouté avec succès");

@@ -22,6 +22,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          user_id: string | null
         }
         Insert: {
           color?: string | null
@@ -30,6 +31,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          user_id?: string | null
         }
         Update: {
           color?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -54,6 +57,7 @@ export type Database = {
           phone: string | null
           total_purchases: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           address?: string | null
@@ -67,6 +71,7 @@ export type Database = {
           phone?: string | null
           total_purchases?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           address?: string | null
@@ -80,6 +85,7 @@ export type Database = {
           phone?: string | null
           total_purchases?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -185,6 +191,7 @@ export type Database = {
           supplier_id: string | null
           tax_rate: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           barcode?: string | null
@@ -203,6 +210,7 @@ export type Database = {
           supplier_id?: string | null
           tax_rate?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           barcode?: string | null
@@ -221,6 +229,7 @@ export type Database = {
           supplier_id?: string | null
           tax_rate?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -453,6 +462,7 @@ export type Database = {
           store_name: string
           tax_rate: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           address?: string | null
@@ -466,6 +476,7 @@ export type Database = {
           store_name: string
           tax_rate?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           address?: string | null
@@ -479,6 +490,7 @@ export type Database = {
           store_name?: string
           tax_rate?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -570,6 +582,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           address?: string | null
@@ -581,6 +594,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           address?: string | null
@@ -592,6 +606,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

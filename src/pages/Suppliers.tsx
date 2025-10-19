@@ -46,7 +46,13 @@ const Suppliers = () => {
       return;
     }
 
-    const { error } = await supabase.from("suppliers").insert([formData]);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Utilisateur non connecté");
+      return;
+    }
+
+    const { error } = await supabase.from("suppliers").insert([{ ...formData, user_id: user.id }]);
 
     if (error) {
       toast.error("Erreur lors de l'ajout du fournisseur");
