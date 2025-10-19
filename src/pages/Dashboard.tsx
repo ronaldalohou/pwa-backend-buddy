@@ -154,12 +154,10 @@ const Dashboard = () => {
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg">
-              <ShoppingBag className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo.png" alt="Logo" className="w-10 h-10" />
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                AfriCaisse POS
+                {profile?.business_name || "AfriCaisse POS"}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Bienvenue, {profile?.full_name}

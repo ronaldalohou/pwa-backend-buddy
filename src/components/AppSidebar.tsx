@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -31,7 +32,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const menuItems = [
@@ -95,6 +95,26 @@ const menuItems = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const navigate = useNavigate();
+  const [businessName, setBusinessName] = useState<string>("");
+
+  useEffect(() => {
+    fetchBusinessName();
+  }, []);
+
+  const fetchBusinessName = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("business_name")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.business_name) {
+      setBusinessName(profile.business_name);
+    }
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -110,12 +130,10 @@ export function AppSidebar() {
     <Sidebar className={!open ? "w-14" : "w-60"} collapsible="icon">
       <SidebarHeader className="p-4 border-b">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg flex-shrink-0">
-            <ShoppingBag className="w-5 h-5 text-white" />
-          </div>
+          <img src="/logo.png" alt="Logo" className="w-8 h-8 flex-shrink-0" />
           {open && (
-            <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              AfriCaisse
+            <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
+              {businessName || "AfriCaisse"}
             </span>
           )}
         </div>
