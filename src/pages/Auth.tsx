@@ -97,6 +97,20 @@ const Auth = () => {
             is_trial: true,
             end_date: trialEndDate.toISOString(),
           });
+
+          // Send welcome email in French
+          try {
+            await supabase.functions.invoke("send-welcome-email", {
+              body: {
+                email: validationResult.data.email,
+                fullName: validationResult.data.fullName,
+                businessName: validationResult.data.businessName,
+              },
+            });
+          } catch (emailError) {
+            console.error("Failed to send welcome email:", emailError);
+            // Don't block registration if email fails
+          }
           
           toast.success("Compte créé ! Vous pouvez maintenant vous connecter.");
           setIsSignUp(false);
