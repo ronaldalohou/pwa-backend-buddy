@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, User, Building2, Phone, FileText, Mail, Calendar, CreditCard } from "lucide-react";
+import { Loader2, User, Building2, Phone, FileText, Mail, Calendar, CreditCard, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useSubscription } from "@/hooks/useSubscription";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [fullName, setFullName] = useState("");
@@ -91,16 +93,24 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="container max-w-4xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Paramètres
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez vos informations personnelles et votre compte
-          </p>
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Paramètres
+            </h1>
+            <p className="text-sm text-muted-foreground hidden md:block">
+              Gérez vos informations personnelles et votre compte
+            </p>
+          </div>
         </div>
+      </header>
+      
+      <div className="container max-w-4xl mx-auto p-4 md:p-6 space-y-6">
 
         <Card>
           <CardHeader>
