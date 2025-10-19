@@ -58,6 +58,16 @@ const Auth = () => {
 
         if (error) throw error;
         
+        if (data.user && !data.session) {
+          // Email de confirmation envoyé (pas encore confirmé)
+          toast.success(
+            "Compte créé ! Vérifiez votre email (et le dossier spam) pour confirmer votre inscription.",
+            { duration: 8000 }
+          );
+          setIsSignUp(false);
+          return;
+        }
+        
         if (data.user) {
           // Create a trial subscription for new users
           const trialEndDate = new Date();
@@ -69,10 +79,10 @@ const Auth = () => {
             is_trial: true,
             end_date: trialEndDate.toISOString(),
           });
+          
+          toast.success("Compte créé ! Vous pouvez maintenant vous connecter.");
+          setIsSignUp(false);
         }
-
-        toast.success("Compte créé ! Veuillez vérifier votre email pour confirmer votre compte.");
-        setIsSignUp(false);
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -110,8 +120,16 @@ const Auth = () => {
               AfriCaisse POS
             </CardTitle>
             <CardDescription className="text-base mt-2">
-              {isSignUp ? "Créer un nouveau compte" : "Connectez-vous à votre compte"}
+              {isSignUp ? "Créer un nouveau compte - 30 jours gratuits" : "Connectez-vous à votre compte"}
             </CardDescription>
+            {isSignUp && (
+              <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm text-center">
+                  📧 Un email de confirmation sera envoyé<br />
+                  <strong>Pensez à vérifier vos spams</strong> si vous ne le recevez pas
+                </p>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
