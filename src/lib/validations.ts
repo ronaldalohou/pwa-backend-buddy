@@ -62,7 +62,11 @@ export const productSchema = z.object({
     .max(1000, "La description est trop longue")
     .optional()
     .or(z.literal("")),
-  category_id: z.string().uuid("Catégorie invalide"),
+  category_id: z
+    .string()
+    .uuid("Catégorie invalide")
+    .optional()
+    .or(z.literal("")),
   price: z
     .string()
     .min(1, "Le prix est requis")

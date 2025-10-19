@@ -77,7 +77,7 @@ const Products = () => {
     const { error } = await supabase.from("products").insert({
       name: validationResult.data.name,
       description: validationResult.data.description || null,
-      category_id: validationResult.data.category_id,
+      category_id: validationResult.data.category_id || null,
       price: parseFloat(validationResult.data.price),
       cost_price: validationResult.data.cost_price ? parseFloat(validationResult.data.cost_price) : null,
       stock_quantity: parseInt(validationResult.data.stock_quantity),
@@ -172,14 +172,13 @@ const Products = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Catégorie *</Label>
+                    <Label>Catégorie (optionnel)</Label>
                     <Select
-                      required
                       value={formData.category_id}
                       onValueChange={(value) => setFormData({ ...formData, category_id: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
+                        <SelectValue placeholder="Sans catégorie" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
