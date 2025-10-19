@@ -19,8 +19,12 @@ const Customers = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<any[]>([]);
   const [creditSales, setCreditSales] = useState<any[]>([]);
+  const [selectedCustomerDetails, setSelectedCustomerDetails] = useState<any>(null);
+  const [customerPayments, setCustomerPayments] = useState<any[]>([]);
+  const [customerSales, setCustomerSales] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -72,6 +76,41 @@ const Customers = () => {
       .in("payment_status", ["credit", "partial"])
       .order("created_at", { ascending: false });
     if (data) setCreditSales(data);
+  };
+
+  const loadCustomerDetails = async (customerId: string) => {
+    // Load customer info
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("id", customerId)
+      .single();
+
+    if (customer) setSelectedCustomerDetails(customer);
+
+    // Load all sales for this customer
+    const { data: sales } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false });
+
+    if (sales) setCustomerSales(sales);
+
+    // Load all payments for this customer
+    const { data: payments } = await supabase
+      .from("payments")
+      .select(`
+        *,
+        sales:sale_id (
+          sale_number,
+          total
+        )
+      `)
+      .in("sale_id", sales?.map(s => s.id) || [])
+      .order("payment_date", { ascending: false });
+
+    if (payments) setCustomerPayments(payments);
   };
 
   const handlePayment = async () => {
@@ -302,6 +341,17 @@ const Customers = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => {
+                                loadCustomerDetails(customer.id);
+                                setIsDetailsDialogOpen(true);
+                              }}
+                              title="Voir l'historique"
+                            >
+                              <Clock className="w-4 h-4" />
+                            </Button>
                             <Button size="icon" variant="ghost" onClick={() => handleEdit(customer)}>
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -538,6 +588,161 @@ const Customers = () => {
                   disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
                 >
                   Enregistrer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Historique du client</DialogTitle>
+          </DialogHeader>
+
+          {selectedCustomerDetails && (
+            <div className="space-y-6">
+              {/* Customer Info */}
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-bold text-lg mb-3">{selectedCustomerDetails.name}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Téléphone:</span>
+                    <p className="font-medium">{selectedCustomerDetails.phone || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Email:</span>
+                    <p className="font-medium">{selectedCustomerDetails.email || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Crédit actuel:</span>
+                    <p className="font-bold text-lg text-destructive">
+                      {formatCurrency(selectedCustomerDetails.current_credit || 0, currency)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Total des achats:</span>
+                    <p className="font-bold text-lg text-green-600">
+                      {formatCurrency(selectedCustomerDetails.total_purchases || 0, currency)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment History */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  Historique des paiements
+                </h4>
+                {customerPayments.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">Aucun paiement enregistré</p>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>N° Vente</TableHead>
+                          <TableHead className="text-right">Montant payé</TableHead>
+                          <TableHead>Méthode</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {customerPayments.map((payment) => (
+                          <TableRow key={payment.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-1 text-sm">
+                                <Clock className="w-3 h-3" />
+                                {format(new Date(payment.payment_date), "dd/MM/yyyy HH:mm")}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {payment.sales?.sale_number || "N/A"}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-green-600">
+                              {formatCurrency(payment.amount, currency)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{payment.payment_method}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+
+              {/* Sales History */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Historique des ventes
+                </h4>
+                {customerSales.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">Aucune vente</p>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>N° Vente</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                          <TableHead className="text-right">Payé</TableHead>
+                          <TableHead className="text-right">Reste</TableHead>
+                          <TableHead className="text-center">Statut</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {customerSales.map((sale) => (
+                          <TableRow key={sale.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-1 text-sm">
+                                <Clock className="w-3 h-3" />
+                                {format(new Date(sale.created_at), "dd/MM/yyyy")}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{sale.sale_number}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(sale.total, currency)}
+                            </TableCell>
+                            <TableCell className="text-right text-green-600">
+                              {formatCurrency(sale.amount_paid, currency)}
+                            </TableCell>
+                            <TableCell className="text-right text-destructive font-medium">
+                              {formatCurrency(sale.amount_remaining, currency)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge
+                                variant={
+                                  sale.payment_status === "completed"
+                                    ? "secondary"
+                                    : sale.payment_status === "credit"
+                                    ? "destructive"
+                                    : "default"
+                                }
+                              >
+                                {sale.payment_status === "completed"
+                                  ? "Payé"
+                                  : sale.payment_status === "credit"
+                                  ? "Crédit"
+                                  : "Partiel"}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={() => setIsDetailsDialogOpen(false)}>
+                  Fermer
                 </Button>
               </div>
             </div>
