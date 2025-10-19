@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/currency";
+import { productSchema } from "@/lib/validations";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -64,14 +65,27 @@ const Products = () => {
       return;
     }
 
+    // Validate form data
+    const validationResult = productSchema.safeParse(formData);
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
     const { error } = await supabase.from("products").insert({
-      ...formData,
+      name: validationResult.data.name,
+      description: validationResult.data.description || null,
+      category_id: validationResult.data.category_id,
+      price: parseFloat(validationResult.data.price),
+      cost_price: validationResult.data.cost_price ? parseFloat(validationResult.data.cost_price) : null,
+      stock_quantity: parseInt(validationResult.data.stock_quantity),
+      min_stock_level: parseInt(validationResult.data.min_stock_level),
+      barcode: validationResult.data.barcode || null,
+      sku: validationResult.data.sku || null,
+      tax_rate: parseFloat(validationResult.data.tax_rate),
       user_id: user.id,
-      price: parseFloat(formData.price),
-      cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
-      stock_quantity: parseInt(formData.stock_quantity),
-      min_stock_level: parseInt(formData.min_stock_level),
-      tax_rate: parseFloat(formData.tax_rate),
     });
 
     if (error) {

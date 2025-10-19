@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, Edit, Trash2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, CurrencyCode } from "@/utils/currency";
+import { customerSchema } from "@/lib/validations";
 
 const Customers = () => {
   const navigate = useNavigate();
@@ -60,10 +61,25 @@ const Customers = () => {
         return;
       }
 
+      // Validate form data
+      const validationResult = customerSchema.safeParse(formData);
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+
       if (editingCustomer) {
         const { error } = await supabase
           .from("customers")
-          .update(formData)
+          .update({
+            name: validationResult.data.name,
+            phone: validationResult.data.phone || null,
+            email: validationResult.data.email || null,
+            address: validationResult.data.address || null,
+            credit_limit: validationResult.data.credit_limit,
+          })
           .eq("id", editingCustomer.id);
         
         if (error) throw error;
@@ -71,7 +87,14 @@ const Customers = () => {
       } else {
         const { error } = await supabase
           .from("customers")
-          .insert([{ ...formData, user_id: user.id }]);
+          .insert([{
+            name: validationResult.data.name,
+            phone: validationResult.data.phone || null,
+            email: validationResult.data.email || null,
+            address: validationResult.data.address || null,
+            credit_limit: validationResult.data.credit_limit,
+            user_id: user.id,
+          }]);
         
         if (error) throw error;
         toast.success("Client ajouté avec succès");

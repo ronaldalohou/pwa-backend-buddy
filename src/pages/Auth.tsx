@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
+import { signUpSchema, signInSchema } from "@/lib/validations";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -42,15 +43,32 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
+        // Validate signup data
+        const validationResult = signUpSchema.safeParse({
           email,
           password,
+          fullName,
+          businessName,
+          phone,
+          ifu,
+        });
+
+        if (!validationResult.success) {
+          const firstError = validationResult.error.errors[0];
+          toast.error(firstError.message);
+          setIsLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({
+          email: validationResult.data.email,
+          password: validationResult.data.password,
           options: {
             data: {
-              full_name: fullName,
-              business_name: businessName,
-              phone: phone,
-              ifu: ifu || null,
+              full_name: validationResult.data.fullName,
+              business_name: validationResult.data.businessName,
+              phone: validationResult.data.phone,
+              ifu: validationResult.data.ifu || null,
             },
             emailRedirectTo: `${window.location.origin}/dashboard`,
           },
@@ -84,9 +102,22 @@ const Auth = () => {
           setIsSignUp(false);
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Validate signin data
+        const validationResult = signInSchema.safeParse({
           email,
           password,
+        });
+
+        if (!validationResult.success) {
+          const firstError = validationResult.error.errors[0];
+          toast.error(firstError.message);
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+          email: validationResult.data.email,
+          password: validationResult.data.password,
         });
 
         if (error) throw error;

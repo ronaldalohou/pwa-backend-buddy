@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
+import { categorySchema } from "@/lib/validations";
 
 const Categories = () => {
   const navigate = useNavigate();
@@ -39,18 +40,28 @@ const Categories = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name) {
-      toast.error("Le nom de la catégorie est requis");
-      return;
-    }
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Utilisateur non connecté");
       return;
     }
 
-    const { error } = await supabase.from("categories").insert([{ ...formData, user_id: user.id }]);
+    // Validate form data
+    const validationResult = categorySchema.safeParse(formData);
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
+    const { error } = await supabase.from("categories").insert([{
+      name: validationResult.data.name,
+      description: validationResult.data.description || null,
+      icon: validationResult.data.icon,
+      color: validationResult.data.color,
+      user_id: user.id,
+    }]);
 
     if (error) {
       toast.error("Erreur lors de l'ajout de la catégorie");

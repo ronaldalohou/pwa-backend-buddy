@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Trash2, Building2, Phone, Mail, User } from "lucide-react";
 import { toast } from "sonner";
+import { supplierSchema } from "@/lib/validations";
 
 const Suppliers = () => {
   const navigate = useNavigate();
@@ -41,18 +42,30 @@ const Suppliers = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name) {
-      toast.error("Le nom du fournisseur est requis");
-      return;
-    }
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Utilisateur non connecté");
       return;
     }
 
-    const { error } = await supabase.from("suppliers").insert([{ ...formData, user_id: user.id }]);
+    // Validate form data
+    const validationResult = supplierSchema.safeParse(formData);
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
+    const { error } = await supabase.from("suppliers").insert([{
+      name: validationResult.data.name,
+      contact_person: validationResult.data.contact_person || null,
+      phone: validationResult.data.phone || null,
+      email: validationResult.data.email || null,
+      address: validationResult.data.address || null,
+      notes: validationResult.data.notes || null,
+      user_id: user.id,
+    }]);
 
     if (error) {
       toast.error("Erreur lors de l'ajout du fournisseur");
