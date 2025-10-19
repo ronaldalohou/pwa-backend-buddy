@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CreditCard, LogOut } from "lucide-react";
+import { AlertCircle, MessageCircle, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -20,11 +20,10 @@ const SubscriptionExpired = () => {
     }
   };
 
-  const handleRenew = () => {
-    // Cette fonction sera liée au système de paiement (Stripe, etc.)
-    toast.info("Le système de paiement sera bientôt disponible");
-    // Pour l'instant, rediriger vers la page d'accueil
-    navigate("/");
+  const handleContactWhatsApp = () => {
+    const phoneNumber = "41779975241";
+    const message = encodeURIComponent("Bonjour, je souhaite renouveler mon abonnement AfriCaisse.");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
   };
 
   return (
@@ -53,14 +52,23 @@ const SubscriptionExpired = () => {
             </p>
           </div>
 
+          <div className="bg-primary/10 p-4 rounded-lg space-y-2 border border-primary/20">
+            <p className="text-sm font-medium text-foreground">
+              Pour renouveler votre abonnement, contactez notre équipe :
+            </p>
+            <p className="text-lg font-bold text-primary">
+              +41 77 997 52 41
+            </p>
+          </div>
+
           <div className="space-y-3">
             <Button 
-              onClick={handleRenew}
-              className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity gap-2"
+              onClick={handleContactWhatsApp}
+              className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white gap-2"
               size="lg"
             >
-              <CreditCard className="w-5 h-5" />
-              Renouveler mon abonnement
+              <MessageCircle className="w-5 h-5" />
+              Contacter sur WhatsApp
             </Button>
 
             <Button
@@ -75,7 +83,7 @@ const SubscriptionExpired = () => {
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              Pour toute question, contactez notre support
+              Équipe AfriCaisse - Support disponible 7j/7
             </p>
           </div>
         </CardContent>
