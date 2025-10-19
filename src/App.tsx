@@ -12,6 +12,10 @@ import Customers from "./pages/Customers";
 import StockMovements from "./pages/StockMovements";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Suppliers from "./pages/Suppliers";
+import Categories from "./pages/Categories";
+import LowStock from "./pages/LowStock";
+import CashReport from "./pages/CashReport";
 import NotFound from "./pages/NotFound";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -100,6 +104,50 @@ const App = () => (
                 <div className="min-h-screen flex w-full">
                   <AppSidebar />
                   <Settings />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/suppliers"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Suppliers />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <Categories />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/low-stock"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <LowStock />
+                </div>
+              </SidebarProvider>
+            }
+          />
+          <Route
+            path="/cash-report"
+            element={
+              <SidebarProvider>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <CashReport />
                 </div>
               </SidebarProvider>
             }

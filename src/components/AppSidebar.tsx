@@ -9,6 +9,11 @@ import {
   LogOut,
   ChevronRight,
   ShoppingBag,
+  Building2,
+  Tag,
+  AlertTriangle,
+  FileText,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,14 +51,39 @@ const menuItems = [
     icon: Package,
   },
   {
+    title: "Catégories",
+    url: "/categories",
+    icon: Tag,
+  },
+  {
+    title: "Fournisseurs",
+    url: "/suppliers",
+    icon: Building2,
+  },
+  {
+    title: "Stock faible",
+    url: "/low-stock",
+    icon: AlertTriangle,
+  },
+  {
     title: "Clients",
     url: "/customers",
     icon: Users,
   },
   {
-    title: "Analyses",
+    title: "Rapports",
     url: "/analytics",
     icon: BarChart3,
+  },
+  {
+    title: "Clôture caisse",
+    url: "/cash-report",
+    icon: FileText,
+  },
+  {
+    title: "Mouvements stock",
+    url: "/stock-movements",
+    icon: TrendingUp,
   },
   {
     title: "Paramètres",

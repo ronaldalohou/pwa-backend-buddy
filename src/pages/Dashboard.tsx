@@ -167,7 +167,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="w-4 h-4" />
             </Button>
             <Button variant="outline" onClick={handleLogout}>
@@ -353,6 +353,7 @@ const Dashboard = () => {
 
           <Card 
             className="border-2 hover:shadow-xl transition-all cursor-pointer group hover:scale-105"
+            onClick={() => navigate("/analytics")}
           >
             <CardHeader>
               <div className="flex items-center gap-3">
