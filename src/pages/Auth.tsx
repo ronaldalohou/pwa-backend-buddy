@@ -222,7 +222,7 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ifu">IFU (optionnel)</Label>
+                  <Label htmlFor="ifu">IFU</Label>
                   <Input
                     id="ifu"
                     type="text"
