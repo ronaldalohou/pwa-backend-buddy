@@ -6,26 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ArrowLeft, Plus, Search, Package, AlertTriangle, Trash2, Boxes, Building2, Phone, Mail, User } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { Menu, ArrowLeft, Plus, Search, Package, AlertTriangle, Trash2, Boxes, Building2, Phone, Mail, User, Tag, TrendingUp, TrendingDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatCurrency, CurrencyCode } from "@/utils/currency";
-import { productSchema, supplierSchema } from "@/lib/validations";
+import { productSchema, supplierSchema, categorySchema } from "@/lib/validations";
 
 const Products = () => {
   const navigate = useNavigate();
+  const { toggleSidebar } = useSidebar();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
+  const [movements, setMovements] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currency, setCurrency] = useState<CurrencyCode>("XOF");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isMovementDialogOpen, setIsMovementDialogOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -46,6 +51,18 @@ const Products = () => {
     address: "",
     notes: "",
   });
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: "",
+    description: "",
+    icon: "📦",
+    color: "#3b82f6",
+  });
+  const [movementFormData, setMovementFormData] = useState({
+    product_id: "",
+    movement_type: "in",
+    quantity: "",
+    notes: "",
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,11 +75,12 @@ const Products = () => {
   }, [navigate]);
 
   const loadData = async () => {
-    const [productsRes, categoriesRes, settingsRes, suppliersRes] = await Promise.all([
+    const [productsRes, categoriesRes, settingsRes, suppliersRes, movementsRes] = await Promise.all([
       supabase.from("products").select("*, categories(name, color)").order("name"),
       supabase.from("categories").select("*").order("name"),
       supabase.from("store_settings").select("currency").single(),
       supabase.from("suppliers").select("*").order("name"),
+      supabase.from("stock_movements").select("*, products(name)").order("created_at", { ascending: false }),
     ]);
 
     if (productsRes.data) {
@@ -75,6 +93,7 @@ const Products = () => {
     if (categoriesRes.data) setCategories(categoriesRes.data);
     if (settingsRes.data) setCurrency(settingsRes.data.currency as CurrencyCode);
     if (suppliersRes.data) setSuppliers(suppliersRes.data);
+    if (movementsRes.data) setMovements(movementsRes.data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,6 +223,110 @@ const Products = () => {
     }
   };
 
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Utilisateur non connecté");
+      return;
+    }
+
+    const validationResult = categorySchema.safeParse(categoryFormData);
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
+    const { error } = await supabase.from("categories").insert([{
+      name: validationResult.data.name,
+      description: validationResult.data.description || null,
+      icon: validationResult.data.icon,
+      color: validationResult.data.color,
+      user_id: user.id,
+    }]);
+
+    if (error) {
+      toast.error("Erreur lors de l'ajout de la catégorie");
+    } else {
+      toast.success("Catégorie ajoutée avec succès");
+      setIsCategoryDialogOpen(false);
+      setCategoryFormData({
+        name: "",
+        description: "",
+        icon: "📦",
+        color: "#3b82f6",
+      });
+      loadData();
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) return;
+
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+    } else {
+      toast.success("Catégorie supprimée");
+      loadData();
+    }
+  };
+
+  const handleMovementSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Utilisateur non connecté");
+      return;
+    }
+
+    const quantity = parseInt(movementFormData.quantity);
+    const movement = {
+      product_id: movementFormData.product_id,
+      movement_type: movementFormData.movement_type,
+      quantity: movementFormData.movement_type === "out" ? -quantity : quantity,
+      notes: movementFormData.notes || null,
+      user_id: user.id,
+    };
+
+    const { error } = await supabase.from("stock_movements").insert(movement);
+
+    if (error) {
+      toast.error("Erreur lors de l'enregistrement du mouvement");
+      return;
+    }
+
+    // Mettre à jour le stock du produit
+    const product = products.find(p => p.id === movementFormData.product_id);
+    if (product) {
+      const newStock = movementFormData.movement_type === "out" 
+        ? product.stock_quantity - quantity 
+        : product.stock_quantity + quantity;
+
+      await supabase
+        .from("products")
+        .update({ stock_quantity: newStock })
+        .eq("id", movementFormData.product_id);
+    }
+
+    toast.success("Mouvement de stock enregistré !");
+    setIsMovementDialogOpen(false);
+    setMovementFormData({
+      product_id: "",
+      movement_type: "in",
+      quantity: "",
+      notes: "",
+    });
+    loadData();
+  };
+
+  const commonIcons = ["📦", "🍔", "☕", "🥤", "🍕", "🛒", "💊", "📱", "👕", "🎮", "📚", "🏠"];
+
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -212,7 +335,9 @@ const Products = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center gap-2">
-          <SidebarTrigger className="md:hidden" />
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
+            <Menu className="w-5 h-5" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="hidden md:flex">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -226,7 +351,9 @@ const Products = () => {
         <Tabs defaultValue="products" className="space-y-4">
           <TabsList>
             <TabsTrigger value="products">Produits</TabsTrigger>
+            <TabsTrigger value="categories">Catégories</TabsTrigger>
             <TabsTrigger value="suppliers">Fournisseurs</TabsTrigger>
+            <TabsTrigger value="movements">Mouvements</TabsTrigger>
             <TabsTrigger value="low-stock">Alertes de Stock</TabsTrigger>
           </TabsList>
 
@@ -452,6 +579,121 @@ const Products = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="categories" className="space-y-4">
+            <div className="flex justify-end">
+              <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-primary to-secondary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter une catégorie
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Nouvelle catégorie</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleCategorySubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="category-name">Nom de la catégorie *</Label>
+                      <Input
+                        id="category-name"
+                        value={categoryFormData.name}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="category-description">Description</Label>
+                      <Textarea
+                        id="category-description"
+                        value={categoryFormData.description}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>Icône</Label>
+                      <div className="grid grid-cols-6 gap-2 mt-2">
+                        {commonIcons.map((icon) => (
+                          <button
+                            key={icon}
+                            type="button"
+                            className={`text-2xl p-2 rounded border-2 hover:scale-110 transition-transform ${
+                              categoryFormData.icon === icon ? "border-primary bg-primary/10" : "border-border"
+                            }`}
+                            onClick={() => setCategoryFormData({ ...categoryFormData, icon })}
+                          >
+                            {icon}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="category-color">Couleur</Label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          id="category-color"
+                          type="color"
+                          value={categoryFormData.color}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, color: e.target.value })}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          type="text"
+                          value={categoryFormData.color}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, color: e.target.value })}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full">Ajouter</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {categories.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <Tag className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Aucune catégorie créée</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {categories.map((category) => (
+                  <Card
+                    key={category.id}
+                    className="border-2 hover:shadow-lg transition-shadow"
+                    style={{ borderColor: category.color }}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{category.icon}</span>
+                          <CardTitle className="text-base">{category.name}</CardTitle>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive h-8 w-8"
+                          onClick={() => handleDeleteCategory(category.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    {category.description && (
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{category.description}</p>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="suppliers" className="space-y-4">
             <div className="flex justify-end">
               <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
@@ -581,6 +823,134 @@ const Products = () => {
                   </Card>
                 ))}
               </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="movements" className="space-y-4">
+            <div className="flex justify-end">
+              <Dialog open={isMovementDialogOpen} onOpenChange={setIsMovementDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-primary to-secondary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nouveau Mouvement
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Enregistrer un mouvement de stock</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleMovementSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Produit *</Label>
+                      <Select
+                        required
+                        value={movementFormData.product_id}
+                        onValueChange={(value) => setMovementFormData({ ...movementFormData, product_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un produit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((product) => (
+                            <SelectItem key={product.id} value={product.id}>
+                              {product.name} (Stock: {product.stock_quantity})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Type de mouvement *</Label>
+                      <Select
+                        required
+                        value={movementFormData.movement_type}
+                        onValueChange={(value) => setMovementFormData({ ...movementFormData, movement_type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="in">Entrée (Réapprovisionnement)</SelectItem>
+                          <SelectItem value="out">Sortie (Ajustement/Perte)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Quantité *</Label>
+                      <Input
+                        type="number"
+                        required
+                        min="1"
+                        value={movementFormData.quantity}
+                        onChange={(e) => setMovementFormData({ ...movementFormData, quantity: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Notes</Label>
+                      <Textarea
+                        value={movementFormData.notes}
+                        onChange={(e) => setMovementFormData({ ...movementFormData, notes: e.target.value })}
+                        placeholder="Raison du mouvement..."
+                        rows={3}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary">
+                      Enregistrer
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {movements.map((movement) => (
+                <Card key={movement.id} className="border-2">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          movement.movement_type === "in" 
+                            ? "bg-secondary/10" 
+                            : movement.movement_type === "out"
+                            ? "bg-destructive/10"
+                            : "bg-muted"
+                        }`}>
+                          {movement.movement_type === "in" ? (
+                            <TrendingUp className="w-5 h-5 text-secondary" />
+                          ) : movement.movement_type === "out" ? (
+                            <TrendingDown className="w-5 h-5 text-destructive" />
+                          ) : (
+                            <Package className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold">{movement.products?.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(movement.created_at).toLocaleString("fr-FR")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={movement.quantity > 0 ? "secondary" : "destructive"}>
+                          {movement.quantity > 0 ? "+" : ""}{movement.quantity}
+                        </Badge>
+                        {movement.notes && (
+                          <p className="text-sm text-muted-foreground mt-1">{movement.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {movements.length === 0 && (
+              <Card className="p-12 text-center">
+                <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Aucun mouvement de stock enregistré
+                </p>
+              </Card>
             )}
           </TabsContent>
 
