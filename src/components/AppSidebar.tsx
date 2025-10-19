@@ -56,24 +56,9 @@ const menuItems = [
     icon: Package,
   },
   {
-    title: "Ajouter produit",
-    url: "/products?add=true",
-    icon: PackagePlus,
-  },
-  {
     title: "Catégories",
     url: "/categories",
     icon: Tag,
-  },
-  {
-    title: "Fournisseurs",
-    url: "/suppliers",
-    icon: Building2,
-  },
-  {
-    title: "Alertes de stock",
-    url: "/low-stock",
-    icon: AlertTriangle,
   },
   {
     title: "Mouvements",
@@ -94,11 +79,6 @@ const menuItems = [
     title: "Rapports",
     url: "/analytics",
     icon: BarChart3,
-  },
-  {
-    title: "Clôture caisse",
-    url: "/cash-report",
-    icon: FileText,
   },
   {
     title: "Paramètres",

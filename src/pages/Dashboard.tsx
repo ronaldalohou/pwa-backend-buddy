@@ -3,19 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
-  ShoppingCart, 
   Package, 
   Users, 
   TrendingUp, 
   LogOut,
-  ShoppingBag,
   BarChart3,
   Settings,
-  FileText
+  CalendarIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, CurrencyCode } from "@/utils/currency";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -33,6 +36,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [currency, setCurrency] = useState<CurrencyCode>("XOF");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [stats, setStats] = useState({
     totalSales: 0,
     todaySales: 0,
@@ -51,12 +55,12 @@ const Dashboard = () => {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         loadProfile(session.user.id);
-        loadStats();
+        loadStats(selectedDate);
       }
     });
 
@@ -72,12 +76,13 @@ const Dashboard = () => {
     setProfile(data);
   };
 
-  const loadStats = async () => {
+  const loadStats = async (filterDate?: Date) => {
     // Load store settings
     const { data: settings } = await supabase.from("store_settings").select("*").single();
     if (settings) setCurrency(settings.currency as CurrencyCode);
 
-    const today = new Date().toISOString().split('T')[0];
+    const targetDate = filterDate || selectedDate;
+    const today = targetDate.toISOString().split('T')[0];
     
     // Load sales
     const { data: salesData } = await supabase
@@ -156,10 +161,10 @@ const Dashboard = () => {
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Logo" className="w-10 h-10" />
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                {profile?.business_name || "africaisse POS"}
+              <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                {profile?.business_name || "Mon Commerce"}
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground hidden md:block">
                 Bienvenue, {profile?.full_name}
               </p>
             </div>
@@ -168,15 +173,51 @@ const Dashboard = () => {
             <Button variant="outline" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="w-4 h-4" />
             </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Déconnexion
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="md:w-auto md:px-4"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden md:inline ml-2">Déconnexion</span>
             </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP", { locale: fr }) : "Sélectionner une date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date);
+                    loadStats(date);
+                  }
+                }}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="border-2 hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -245,7 +286,7 @@ const Dashboard = () => {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Ventes des 7 derniers jours</CardTitle>
@@ -287,84 +328,6 @@ const Dashboard = () => {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card 
-            className="border-2 hover:shadow-xl transition-all cursor-pointer group hover:scale-105"
-            onClick={() => navigate("/pos")}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-xl group-hover:scale-110 transition-transform">
-                  <ShoppingCart className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-xl">Point de Vente</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Effectuer des ventes et gérer les transactions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-2 hover:shadow-xl transition-all cursor-pointer group hover:scale-105"
-            onClick={() => navigate("/products")}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-secondary to-accent rounded-xl group-hover:scale-110 transition-transform">
-                  <Package className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-xl">Produits</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Gérer l'inventaire et les produits
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-2 hover:shadow-xl transition-all cursor-pointer group hover:scale-105"
-            onClick={() => navigate("/customers")}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-accent to-primary rounded-xl group-hover:scale-110 transition-transform">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-xl">Clients</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Gérer les clients et la fidélité
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-2 hover:shadow-xl transition-all cursor-pointer group hover:scale-105"
-            onClick={() => navigate("/analytics")}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-primary to-accent rounded-xl group-hover:scale-110 transition-transform">
-                  <FileText className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-xl">Rapports</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Consulter les statistiques détaillées
-              </p>
             </CardContent>
           </Card>
         </div>
