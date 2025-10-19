@@ -18,6 +18,7 @@ import Categories from "./pages/Categories";
 import LowStock from "./pages/LowStock";
 import CashReport from "./pages/CashReport";
 import SubscriptionExpired from "./pages/SubscriptionExpired";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -217,6 +218,19 @@ const App = () => (
               <SubscriptionExpired />
             </ProtectedRoute>
           } />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <Admin />
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
