@@ -7,6 +7,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { PaymentMethod, PAYMENT_METHODS, formatCurrency, CurrencyCode } from "@/utils/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface PaymentDialogProps {
   open: boolean;
@@ -21,6 +24,43 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [amountPaid, setAmountPaid] = useState<string>(total.toString());
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState("");
+
+  const handleAddCustomer = async () => {
+    if (!newCustomerName.trim()) {
+      toast.error("Le nom du client est requis");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({
+        user_id: user.id,
+        name: newCustomerName.trim(),
+        phone: newCustomerPhone.trim() || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Erreur lors de l'ajout du client");
+      return;
+    }
+
+    toast.success("Client ajouté avec succès");
+    setSelectedCustomer(data.id);
+    setShowNewCustomerForm(false);
+    setNewCustomerName("");
+    setNewCustomerPhone("");
+    
+    // Refresh customers list
+    window.location.reload();
+  };
 
   const handleConfirm = () => {
     const paid = parseFloat(amountPaid) || 0;
@@ -61,20 +101,76 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
 
           {/* Customer selection for credit */}
           {paymentMethod === "credit" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>Client (obligatoire pour crédit)</Label>
-              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} - Crédit: {formatCurrency(customer.current_credit, currency)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!showNewCustomerForm ? (
+                <>
+                  <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} - Crédit: {formatCurrency(customer.current_credit, currency)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setShowNewCustomerForm(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter un nouveau client
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-3 p-3 border rounded-lg">
+                  <div className="space-y-2">
+                    <Label>Nom du client *</Label>
+                    <Input
+                      value={newCustomerName}
+                      onChange={(e) => setNewCustomerName(e.target.value)}
+                      placeholder="Ex: Jean Dupont"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Téléphone (optionnel)</Label>
+                    <Input
+                      value={newCustomerPhone}
+                      onChange={(e) => setNewCustomerPhone(e.target.value)}
+                      placeholder="Ex: +229 12 34 56 78"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowNewCustomerForm(false);
+                        setNewCustomerName("");
+                        setNewCustomerPhone("");
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleAddCustomer}
+                    >
+                      Ajouter
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

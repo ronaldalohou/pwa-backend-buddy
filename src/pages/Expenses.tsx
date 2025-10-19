@@ -32,6 +32,7 @@ const Expenses = () => {
     amount: "",
     category: "",
   });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -67,12 +68,36 @@ const Expenses = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    let receiptUrl = null;
+
+    // Upload receipt if provided
+    if (receiptFile) {
+      const fileExt = receiptFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('expense-receipts')
+        .upload(fileName, receiptFile);
+
+      if (uploadError) {
+        toast.error("Erreur lors de l'upload de la preuve");
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('expense-receipts')
+        .getPublicUrl(fileName);
+      
+      receiptUrl = urlData.publicUrl;
+    }
+
     const { error } = await supabase.from("expenses").insert({
       user_id: user.id,
       date: formData.date,
       description: formData.description,
       amount: parseFloat(formData.amount),
       category: formData.category || null,
+      receipt_url: receiptUrl,
     });
 
     if (error) {
@@ -88,6 +113,7 @@ const Expenses = () => {
       amount: "",
       category: "",
     });
+    setReceiptFile(null);
     loadData(user.id);
   };
 
@@ -158,6 +184,17 @@ const Expenses = () => {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="Ex: Fournitures, Loyer, Salaire..."
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Preuve de dépense (optionnel)</Label>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Image ou PDF (max 5 MB)
+                </p>
               </div>
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
