@@ -12,6 +12,9 @@ export const signUpSchema = z.object({
     .string()
     .min(6, "Le mot de passe doit contenir au moins 6 caractères")
     .max(100, "Le mot de passe est trop long"),
+  confirmPassword: z
+    .string()
+    .min(1, "Veuillez confirmer votre mot de passe"),
   fullName: z
     .string()
     .trim()
@@ -34,6 +37,9 @@ export const signUpSchema = z.object({
     .max(20, "L'IFU est trop long")
     .optional()
     .or(z.literal("")),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ["confirmPassword"],
 });
 
 export const signInSchema = z.object({
