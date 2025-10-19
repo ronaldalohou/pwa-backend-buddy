@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { toast } from "sonner";
 import { Loader2, User, Building2, Phone, FileText, Mail, Calendar, CreditCard, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -95,8 +96,9 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+        <div className="container mx-auto px-4 py-4 flex items-center gap-2">
+          <SidebarTrigger className="md:hidden" />
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="hidden md:flex">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
