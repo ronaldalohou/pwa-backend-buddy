@@ -21,6 +21,7 @@ import Expenses from "./pages/Expenses";
 import SubscriptionExpired from "./pages/SubscriptionExpired";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import SalesHistory from "./pages/SalesHistory";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,6 +223,19 @@ const App = () => (
                   <div className="min-h-screen flex w-full">
                     <AppSidebar />
                     <Expenses />
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sales-history"
+            element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <SalesHistory />
                   </div>
                 </SidebarProvider>
               </ProtectedRoute>

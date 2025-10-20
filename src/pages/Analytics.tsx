@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileDown, TrendingUp, TrendingDown, DollarSign, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency, CurrencyCode } from "@/utils/currency";
@@ -19,6 +21,8 @@ interface FinancialData {
   profit: number;
   salesCount: number;
   expensesCount: number;
+  purchaseCostDetails?: Array<{ product_name: string; quantity: number; cost_price: number; total: number }>;
+  expenseDetails?: Array<{ description: string; amount: number; date: string; category: string }>;
 }
 
 export default function Analytics() {
@@ -35,6 +39,8 @@ export default function Analytics() {
     expensesCount: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsType, setDetailsType] = useState<"purchases" | "expenses" | null>(null);
 
   useEffect(() => {
     loadCurrency();
@@ -72,14 +78,37 @@ export default function Analytics() {
       
       // Calculate purchase costs (cost_price * quantity for all sold items)
       let totalPurchaseCosts = 0;
+      const purchaseCostDetails: Array<{ product_name: string; quantity: number; cost_price: number; total: number }> = [];
+      
       salesData?.forEach((sale: any) => {
         sale.sale_items?.forEach((item: any) => {
           const costPrice = item.products?.cost_price || 0;
-          totalPurchaseCosts += Number(costPrice) * item.quantity;
+          const itemTotal = Number(costPrice) * item.quantity;
+          totalPurchaseCosts += itemTotal;
+          
+          // Group by product name
+          const existing = purchaseCostDetails.find(d => d.product_name === item.product_name);
+          if (existing) {
+            existing.quantity += item.quantity;
+            existing.total += itemTotal;
+          } else {
+            purchaseCostDetails.push({
+              product_name: item.product_name,
+              quantity: item.quantity,
+              cost_price: costPrice,
+              total: itemTotal
+            });
+          }
         });
       });
 
       const totalExpenses = expensesData?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
+      const expenseDetails = expensesData?.map((expense: any) => ({
+        description: expense.description || "Sans description",
+        amount: expense.amount,
+        date: expense.date,
+        category: expense.category
+      })) || [];
       const profit = totalSales - totalPurchaseCosts - totalExpenses;
 
       setData({
@@ -89,6 +118,8 @@ export default function Analytics() {
         profit,
         salesCount: salesData?.length || 0,
         expensesCount: expensesData?.length || 0,
+        purchaseCostDetails,
+        expenseDetails
       });
     } catch (error) {
       console.error("Error loading financial data:", error);
@@ -229,7 +260,7 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => { setDetailsType("purchases"); setDetailsOpen(true); }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Coûts d'achat</CardTitle>
             <TrendingDown className="h-4 w-4 text-destructive" />
@@ -238,11 +269,11 @@ export default function Analytics() {
             <div className="text-2xl font-bold text-destructive">
               -{formatCurrency(data.totalPurchaseCosts, currency)}
             </div>
-            <p className="text-xs text-muted-foreground">Prix de revient des produits vendus</p>
+            <p className="text-xs text-muted-foreground">Cliquez pour voir le détail</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => { setDetailsType("expenses"); setDetailsOpen(true); }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Dépenses</CardTitle>
             <TrendingDown className="h-4 w-4 text-destructive" />
@@ -251,7 +282,7 @@ export default function Analytics() {
             <div className="text-2xl font-bold text-destructive">
               -{formatCurrency(data.totalExpenses, currency)}
             </div>
-            <p className="text-xs text-muted-foreground">{data.expensesCount} dépense(s)</p>
+            <p className="text-xs text-muted-foreground">Cliquez pour voir le détail</p>
           </CardContent>
         </Card>
 
@@ -268,6 +299,77 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {detailsType === "purchases" ? "Détail des coûts d'achat" : "Détail des dépenses"}
+            </DialogTitle>
+            <DialogDescription>
+              Période: {format(new Date(startDate), "dd/MM/yyyy")} - {format(new Date(endDate), "dd/MM/yyyy")}
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailsType === "purchases" && data.purchaseCostDetails && (
+            <div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produit</TableHead>
+                    <TableHead className="text-center">Quantité vendue</TableHead>
+                    <TableHead className="text-right">Coût unitaire</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.purchaseCostDetails.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.product_name}</TableCell>
+                      <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.cost_price, currency)}</TableCell>
+                      <TableCell className="text-right font-semibold">{formatCurrency(item.total, currency)}</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold bg-muted/50">
+                    <TableCell colSpan={3} className="text-right">Total des coûts d'achat:</TableCell>
+                    <TableCell className="text-right">{formatCurrency(data.totalPurchaseCosts, currency)}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {detailsType === "expenses" && data.expenseDetails && (
+            <div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Catégorie</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.expenseDetails.map((expense, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{format(new Date(expense.date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{expense.category}</TableCell>
+                      <TableCell>{expense.description}</TableCell>
+                      <TableCell className="text-right font-semibold">{formatCurrency(expense.amount, currency)}</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold bg-muted/50">
+                    <TableCell colSpan={3} className="text-right">Total des dépenses:</TableCell>
+                    <TableCell className="text-right">{formatCurrency(data.totalExpenses, currency)}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>

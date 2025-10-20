@@ -61,6 +61,11 @@ const menuItems = [
     icon: Users,
   },
   {
+    title: "Historique des ventes",
+    url: "/sales-history",
+    icon: FileText,
+  },
+  {
     title: "Dépenses",
     url: "/expenses",
     icon: Receipt,
