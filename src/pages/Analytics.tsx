@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileDown, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { FileDown, TrendingUp, TrendingDown, DollarSign, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { formatCurrency, CurrencyCode } from "@/utils/currency";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -21,6 +22,7 @@ interface FinancialData {
 }
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const [currency, setCurrency] = useState<CurrencyCode>("XOF");
   const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
@@ -170,9 +172,14 @@ export default function Analytics() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Analyses Financières</h1>
-          <p className="text-muted-foreground">Bénéfices et chiffre d'affaires sur période</p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Analyses Financières</h1>
+            <p className="text-muted-foreground">Bénéfices et chiffre d'affaires sur période</p>
+          </div>
         </div>
       </div>
 
