@@ -213,9 +213,36 @@ export const supplierSchema = z.object({
     .or(z.literal("")),
 });
 
+// Profile update validation schema
+export const profileUpdateSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Le nom complet est requis")
+    .max(100, "Le nom est trop long"),
+  businessName: z
+    .string()
+    .trim()
+    .min(1, "Le nom du commerce est requis")
+    .max(100, "Le nom du commerce est trop long"),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Le téléphone est requis")
+    .max(20, "Le téléphone est trop long")
+    .regex(/^[+]?[\d\s-()]+$/, "Format de téléphone invalide"),
+  ifu: z
+    .string()
+    .trim()
+    .max(20, "L'IFU est trop long")
+    .optional()
+    .or(z.literal("")),
+});
+
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type SignInFormData = z.infer<typeof signInSchema>;
 export type ProductFormData = z.infer<typeof productSchema>;
 export type CustomerFormData = z.infer<typeof customerSchema>;
 export type CategoryFormData = z.infer<typeof categorySchema>;
 export type SupplierFormData = z.infer<typeof supplierSchema>;
+export type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>;

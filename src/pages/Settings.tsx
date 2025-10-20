@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, User, Building2, Phone, FileText, Mail, Calendar, CreditCard, ArrowLeft, Menu } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useSubscription } from "@/hooks/useSubscription";
+import { profileUpdateSchema } from "@/lib/validations";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -53,21 +54,39 @@ const Settings = () => {
     setIsLoading(true);
 
     try {
+      // Validate form data
+      const validationResult = profileUpdateSchema.safeParse({
+        fullName,
+        businessName,
+        phone,
+        ifu,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        setIsLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
 
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: fullName,
-          business_name: businessName,
-          phone: phone,
-          ifu: ifu || null,
+          full_name: validationResult.data.fullName,
+          business_name: validationResult.data.businessName,
+          phone: validationResult.data.phone,
+          ifu: validationResult.data.ifu || null,
         })
         .eq("id", user.id);
 
       if (error) throw error;
       toast.success("Profil mis à jour avec succès !");
+      
+      // Refresh profile data
+      await fetchProfile();
     } catch (error: any) {
       toast.error(error.message || "Une erreur est survenue");
     } finally {
