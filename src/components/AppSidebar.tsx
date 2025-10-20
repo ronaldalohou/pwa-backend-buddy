@@ -56,16 +56,6 @@ const menuItems = [
     icon: Package,
   },
   {
-    title: "Catégories",
-    url: "/categories",
-    icon: Tag,
-  },
-  {
-    title: "Mouvements",
-    url: "/stock-movements",
-    icon: ArrowRightLeft,
-  },
-  {
     title: "Clients",
     url: "/customers",
     icon: Users,
