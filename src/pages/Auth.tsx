@@ -166,7 +166,7 @@ const Auth = () => {
           </div>
           <div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              africaisse POS
+              Africaisse
             </CardTitle>
             <CardDescription className="text-base mt-2">
               {isSignUp ? "Créer un nouveau compte - 30 jours gratuits" : "Connectez-vous à votre compte"}
