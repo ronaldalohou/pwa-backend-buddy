@@ -81,18 +81,9 @@ const Auth = () => {
 
         if (error) throw error;
         
-        if (data.user && !data.session) {
-          // Email de confirmation envoyé (pas encore confirmé)
-          toast.success(
-            "Compte créé ! Vérifiez votre email (et le dossier spam) pour confirmer votre inscription.",
-            { duration: 8000 }
-          );
-          setIsSignUp(false);
-          return;
-        }
-        
         if (data.user) {
           // Create a trial subscription for new users
+          const startDate = new Date();
           const trialEndDate = new Date();
           trialEndDate.setDate(trialEndDate.getDate() + 30);
 
@@ -100,8 +91,22 @@ const Auth = () => {
             user_id: data.user.id,
             status: "trial",
             is_trial: true,
+            start_date: startDate.toISOString(),
             end_date: trialEndDate.toISOString(),
           });
+        }
+        
+        if (data.user && !data.session) {
+          // Email de confirmation envoyé (pas encore confirmé)
+          toast.success(
+            "Compte créé avec un essai gratuit de 30 jours ! Vérifiez votre email (et le dossier spam) pour confirmer votre inscription.",
+            { duration: 8000 }
+          );
+          setIsSignUp(false);
+          return;
+        }
+        
+        if (data.user) {
 
           // Send welcome email in French
           try {
