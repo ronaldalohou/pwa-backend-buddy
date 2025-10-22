@@ -22,6 +22,7 @@ const Products = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [selectedType, setSelectedType] = useState<string>("");
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
   const [movements, setMovements] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -147,6 +148,7 @@ const Products = () => {
 
     toast.success("Produit ajouté avec succès !");
     setIsDialogOpen(false);
+    setSelectedType("");
     setFormData({
       name: "",
       description: "",
@@ -365,7 +367,6 @@ const Products = () => {
         <Tabs defaultValue="products" className="space-y-4">
           <TabsList>
             <TabsTrigger value="products">Produits</TabsTrigger>
-            <TabsTrigger value="categories">Catégories</TabsTrigger>
             <TabsTrigger value="suppliers">Fournisseurs</TabsTrigger>
             <TabsTrigger value="movements">Mouvements</TabsTrigger>
             <TabsTrigger value="low-stock">Alertes de Stock</TabsTrigger>
@@ -382,12 +383,39 @@ const Products = () => {
                 </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Ajouter un produit</DialogTitle>
+                <DialogTitle>Ajouter un nouveau produit/service</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2 col-span-2">
-                    <Label>Nom du produit *</Label>
+                    <Label>Type *</Label>
+                    <Select
+                      value={selectedType}
+                      onValueChange={(value) => {
+                        setSelectedType(value);
+                        const category = categories.find(c => c.name === value);
+                        setFormData({ 
+                          ...formData, 
+                          category_id: category?.id || "",
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Produit">Produit</SelectItem>
+                        <SelectItem value="Service">Service</SelectItem>
+                        <SelectItem value="Restauration">Restauration</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>
+                      {selectedType === "Produit" ? "Nom du produit *" : 
+                       selectedType === "Service" ? "Nom du service *" : 
+                       selectedType === "Restauration" ? "Nom du plat/boisson *" : "Nom *"}
+                    </Label>
                     <Input
                       required
                       value={formData.name}
@@ -403,24 +431,6 @@ const Products = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Catégorie (optionnel)</Label>
-                    <Select
-                      value={formData.category_id}
-                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sans catégorie" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.icon} {cat.name} {cat.type === "service" ? "🔧" : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
                     <Label>Prix de vente *</Label>
                     <Input
                       type="number"
@@ -430,7 +440,7 @@ const Products = () => {
                       step="0.01"
                     />
                   </div>
-                  {(!formData.category_id || categories.find(c => c.id === formData.category_id)?.type !== "service") && (
+                  {selectedType === "Produit" && (
                     <>
                       <div className="space-y-2">
                         <Label>Prix de revient</Label>
@@ -596,141 +606,6 @@ const Products = () => {
                   {searchQuery ? "Aucun produit trouvé" : "Aucun produit. Commencez par en ajouter un !"}
                 </p>
               </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="categories" className="space-y-4">
-            <div className="flex justify-end">
-              <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-primary to-secondary">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Ajouter une catégorie
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Nouvelle catégorie</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCategorySubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="category-type">Type *</Label>
-                      <Select
-                        value={categoryFormData.type}
-                        onValueChange={(value: "product" | "service") => 
-                          setCategoryFormData({ ...categoryFormData, type: value })
-                        }
-                      >
-                        <SelectTrigger id="category-type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="product">📦 Produit (avec stock)</SelectItem>
-                          <SelectItem value="service">🔧 Service (sans stock)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="category-name">Nom de la catégorie *</Label>
-                      <Input
-                        id="category-name"
-                        value={categoryFormData.name}
-                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="category-description">Description</Label>
-                      <Textarea
-                        id="category-description"
-                        value={categoryFormData.description}
-                        onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
-                        rows={2}
-                      />
-                    </div>
-                    <div>
-                      <Label>Icône</Label>
-                      <div className="grid grid-cols-6 gap-2 mt-2">
-                        {commonIcons.map((icon) => (
-                          <button
-                            key={icon}
-                            type="button"
-                            className={`text-2xl p-2 rounded border-2 hover:scale-110 transition-transform ${
-                              categoryFormData.icon === icon ? "border-primary bg-primary/10" : "border-border"
-                            }`}
-                            onClick={() => setCategoryFormData({ ...categoryFormData, icon })}
-                          >
-                            {icon}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="category-color">Couleur</Label>
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          id="category-color"
-                          type="color"
-                          value={categoryFormData.color}
-                          onChange={(e) => setCategoryFormData({ ...categoryFormData, color: e.target.value })}
-                          className="w-20 h-10"
-                        />
-                        <Input
-                          type="text"
-                          value={categoryFormData.color}
-                          onChange={(e) => setCategoryFormData({ ...categoryFormData, color: e.target.value })}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                    <Button type="submit" className="w-full">Ajouter</Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {categories.length === 0 ? (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Tag className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Aucune catégorie créée</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {categories.map((category) => (
-                  <Card
-                    key={category.id}
-                    className="border-2 hover:shadow-lg transition-shadow"
-                    style={{ borderColor: category.color }}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{category.icon}</span>
-                          <CardTitle className="text-base">{category.name}</CardTitle>
-                          <Badge variant="outline" className="ml-2">
-                            {category.type === "service" ? "🔧 Service" : "📦 Produit"}
-                          </Badge>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive h-8 w-8"
-                          onClick={() => handleDeleteCategory(category.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    {category.description && (
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
             )}
           </TabsContent>
 

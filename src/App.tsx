@@ -14,7 +14,6 @@ import StockMovements from "./pages/StockMovements";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Suppliers from "./pages/Suppliers";
-import Categories from "./pages/Categories";
 import LowStock from "./pages/LowStock";
 import CashReport from "./pages/CashReport";
 import Expenses from "./pages/Expenses";
@@ -171,19 +170,6 @@ const App = () => (
                   <div className="min-h-screen flex w-full">
                     <AppSidebar />
                     <Suppliers />
-                  </div>
-                </SidebarProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/categories"
-            element={
-              <ProtectedRoute>
-                <SidebarProvider>
-                  <div className="min-h-screen flex w-full">
-                    <AppSidebar />
-                    <Categories />
                   </div>
                 </SidebarProvider>
               </ProtectedRoute>
