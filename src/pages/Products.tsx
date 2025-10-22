@@ -430,17 +430,17 @@ const Products = () => {
                       step="0.01"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Prix de revient</Label>
-                    <Input
-                      type="number"
-                      value={formData.cost_price}
-                      onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-                      step="0.01"
-                    />
-                  </div>
                   {(!formData.category_id || categories.find(c => c.id === formData.category_id)?.type !== "service") && (
                     <>
+                      <div className="space-y-2">
+                        <Label>Prix de revient</Label>
+                        <Input
+                          type="number"
+                          value={formData.cost_price}
+                          onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+                          step="0.01"
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label>Stock initial *</Label>
                         <Input
@@ -458,22 +458,22 @@ const Products = () => {
                           onChange={(e) => setFormData({ ...formData, min_stock_level: e.target.value })}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label>Code-barres</Label>
+                        <Input
+                          value={formData.barcode}
+                          onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>SKU</Label>
+                        <Input
+                          value={formData.sku}
+                          onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                        />
+                      </div>
                     </>
                   )}
-                  <div className="space-y-2">
-                    <Label>Code-barres</Label>
-                    <Input
-                      value={formData.barcode}
-                      onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>SKU</Label>
-                    <Input
-                      value={formData.sku}
-                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label>TVA (%)</Label>
                     <Input
