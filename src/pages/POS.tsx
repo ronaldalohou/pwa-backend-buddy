@@ -54,7 +54,11 @@ const POS = () => {
   };
 
   const loadCategories = async () => {
-    const { data } = await supabase.from("categories").select("*").order("name");
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .in("name", ["Produit", "Service", "Restauration"])
+      .order("name");
     if (data) setCategories(data);
   };
 
