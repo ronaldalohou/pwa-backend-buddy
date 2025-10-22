@@ -56,6 +56,7 @@ const Products = () => {
     description: "",
     icon: "📦",
     color: "#3b82f6",
+    type: "product" as "product" | "service",
   });
   const [movementFormData, setMovementFormData] = useState({
     product_id: "",
@@ -105,8 +106,19 @@ const Products = () => {
       return;
     }
 
+    // Check if the selected category is a service
+    const selectedCategory = categories.find(c => c.id === formData.category_id);
+    const isService = selectedCategory?.type === "service";
+
+    // Prepare form data - set stock values to 0 for services
+    const dataToValidate = {
+      ...formData,
+      stock_quantity: isService ? "0" : formData.stock_quantity,
+      min_stock_level: isService ? "0" : formData.min_stock_level,
+    };
+
     // Validate form data
-    const validationResult = productSchema.safeParse(formData);
+    const validationResult = productSchema.safeParse(dataToValidate);
 
     if (!validationResult.success) {
       const firstError = validationResult.error.errors[0];
@@ -245,6 +257,7 @@ const Products = () => {
       description: validationResult.data.description || null,
       icon: validationResult.data.icon,
       color: validationResult.data.color,
+      type: validationResult.data.type,
       user_id: user.id,
     }]);
 
@@ -258,6 +271,7 @@ const Products = () => {
         description: "",
         icon: "📦",
         color: "#3b82f6",
+        type: "product",
       });
       loadData();
     }
@@ -400,7 +414,7 @@ const Products = () => {
                       <SelectContent>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
-                            {cat.icon} {cat.name}
+                            {cat.icon} {cat.name} {cat.type === "service" ? "🔧" : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -425,23 +439,27 @@ const Products = () => {
                       step="0.01"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Stock initial *</Label>
-                    <Input
-                      type="number"
-                      required
-                      value={formData.stock_quantity}
-                      onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Seuil d'alerte</Label>
-                    <Input
-                      type="number"
-                      value={formData.min_stock_level}
-                      onChange={(e) => setFormData({ ...formData, min_stock_level: e.target.value })}
-                    />
-                  </div>
+                  {(!formData.category_id || categories.find(c => c.id === formData.category_id)?.type !== "service") && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Stock initial *</Label>
+                        <Input
+                          type="number"
+                          required
+                          value={formData.stock_quantity}
+                          onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Seuil d'alerte</Label>
+                        <Input
+                          type="number"
+                          value={formData.min_stock_level}
+                          onChange={(e) => setFormData({ ...formData, min_stock_level: e.target.value })}
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="space-y-2">
                     <Label>Code-barres</Label>
                     <Input
@@ -507,7 +525,7 @@ const Products = () => {
                         </Badge>
                       )}
                     </div>
-                    {isLowStock && (
+                    {isLowStock && product.categories?.type !== "service" && (
                       <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 ml-2" />
                     )}
                   </div>
@@ -531,13 +549,15 @@ const Products = () => {
                       <span className="text-sm font-medium text-secondary">{margin}%</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Stock</span>
-                    <Badge variant={isLowStock ? "destructive" : "secondary"}>
-                      <Package className="w-3 h-3 mr-1" />
-                      {product.stock_quantity}
-                    </Badge>
-                  </div>
+                  {product.categories?.type !== "service" && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Stock</span>
+                      <Badge variant={isLowStock ? "destructive" : "secondary"}>
+                        <Package className="w-3 h-3 mr-1" />
+                        {product.stock_quantity}
+                      </Badge>
+                    </div>
+                  )}
                   {product.sku && (
                     <div className="flex justify-between items-center text-xs text-muted-foreground">
                       <span>SKU:</span>
@@ -593,6 +613,23 @@ const Products = () => {
                     <DialogTitle>Nouvelle catégorie</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleCategorySubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="category-type">Type *</Label>
+                      <Select
+                        value={categoryFormData.type}
+                        onValueChange={(value: "product" | "service") => 
+                          setCategoryFormData({ ...categoryFormData, type: value })
+                        }
+                      >
+                        <SelectTrigger id="category-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="product">📦 Produit (avec stock)</SelectItem>
+                          <SelectItem value="service">🔧 Service (sans stock)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div>
                       <Label htmlFor="category-name">Nom de la catégorie *</Label>
                       <Input
@@ -672,6 +709,9 @@ const Products = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-2xl">{category.icon}</span>
                           <CardTitle className="text-base">{category.name}</CardTitle>
+                          <Badge variant="outline" className="ml-2">
+                            {category.type === "service" ? "🔧 Service" : "📦 Produit"}
+                          </Badge>
                         </div>
                         <Button
                           variant="ghost"

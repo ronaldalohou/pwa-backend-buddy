@@ -170,6 +170,9 @@ export const categorySchema = z.object({
     .string()
     .trim()
     .regex(/^#[0-9A-Fa-f]{6}$/, "Format de couleur invalide"),
+  type: z.enum(["product", "service"], {
+    required_error: "Le type est requis",
+  }),
 });
 
 // Supplier validation schema

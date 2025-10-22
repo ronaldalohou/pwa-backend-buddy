@@ -22,6 +22,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          type: string
           user_id: string | null
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          type?: string
           user_id?: string | null
         }
         Update: {
@@ -40,6 +42,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          type?: string
           user_id?: string | null
         }
         Relationships: []
@@ -636,10 +639,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_sale_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_sale_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

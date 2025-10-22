@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { categorySchema } from "@/lib/validations";
@@ -20,6 +22,7 @@ const Categories = () => {
     description: "",
     icon: "📦",
     color: "#3b82f6",
+    type: "product" as "product" | "service",
   });
 
   useEffect(() => {
@@ -60,6 +63,7 @@ const Categories = () => {
       description: validationResult.data.description || null,
       icon: validationResult.data.icon,
       color: validationResult.data.color,
+      type: validationResult.data.type,
       user_id: user.id,
     }]);
 
@@ -73,6 +77,7 @@ const Categories = () => {
         description: "",
         icon: "📦",
         color: "#3b82f6",
+        type: "product",
       });
       loadCategories();
     }
@@ -118,6 +123,23 @@ const Categories = () => {
                 <DialogTitle>Nouvelle catégorie</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="type">Type *</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value: "product" | "service") => 
+                      setFormData({ ...formData, type: value })
+                    }
+                  >
+                    <SelectTrigger id="type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="product">📦 Produit (avec stock)</SelectItem>
+                      <SelectItem value="service">🔧 Service (sans stock)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label htmlFor="name">Nom de la catégorie *</Label>
                   <Input
@@ -198,7 +220,12 @@ const Categories = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl">{category.icon}</span>
-                      <CardTitle className="text-base">{category.name}</CardTitle>
+                      <div className="flex flex-col gap-1">
+                        <CardTitle className="text-base">{category.name}</CardTitle>
+                        <Badge variant="outline" className="w-fit text-xs">
+                          {category.type === "service" ? "🔧 Service" : "📦 Produit"}
+                        </Badge>
+                      </div>
                     </div>
                     <Button
                       variant="ghost"
