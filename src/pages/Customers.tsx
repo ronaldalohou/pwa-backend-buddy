@@ -55,11 +55,50 @@ const Customers = () => {
   };
 
   const loadCustomers = async () => {
-    const { data } = await supabase
+    const { data: customersData } = await supabase
       .from("customers")
       .select("*")
       .order("name");
-    if (data) setCustomers(data);
+    
+    if (!customersData) return;
+
+    // Pour chaque client, calculer ses statistiques de visites
+    const customersWithStats = await Promise.all(
+      customersData.map(async (customer) => {
+        const { data: sales } = await supabase
+          .from("sales")
+          .select("created_at")
+          .eq("customer_id", customer.id);
+
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+
+        const totalVisits = sales?.length || 0;
+        const visitsThisMonth = sales?.filter((s) => {
+          const saleDate = new Date(s.created_at);
+          return saleDate.getMonth() === thisMonth && saleDate.getFullYear() === thisYear;
+        }).length || 0;
+        const visitsThisYear = sales?.filter((s) => {
+          const saleDate = new Date(s.created_at);
+          return saleDate.getFullYear() === thisYear;
+        }).length || 0;
+
+        const lastVisit = sales && sales.length > 0
+          ? new Date(Math.max(...sales.map((s) => new Date(s.created_at).getTime())))
+          : null;
+
+        return {
+          ...customer,
+          totalVisits,
+          visitsThisMonth,
+          visitsThisYear,
+          lastVisit,
+        };
+      })
+    );
+
+    setCustomers(customersWithStats);
   };
 
   const loadCreditSales = async () => {
@@ -314,14 +353,16 @@ const Customers = () => {
                 <CardTitle>Liste des clients</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nom</TableHead>
                       <TableHead>Téléphone</TableHead>
-                      <TableHead>Email</TableHead>
+                      <TableHead className="text-center">Visites Total</TableHead>
+                      <TableHead className="text-center">Ce Mois</TableHead>
+                      <TableHead className="text-center">Cette Année</TableHead>
+                      <TableHead className="text-center">Dernière visite</TableHead>
                       <TableHead className="text-right">Crédit actuel</TableHead>
-                      <TableHead className="text-right">Limite crédit</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -330,14 +371,31 @@ const Customers = () => {
                       <TableRow key={customer.id}>
                         <TableCell className="font-medium">{customer.name}</TableCell>
                         <TableCell>{customer.phone || "-"}</TableCell>
-                        <TableCell>{customer.email || "-"}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className="font-bold">
+                            {customer.totalVisits}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline">
+                            {customer.visitsThisMonth}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline">
+                            {customer.visitsThisYear}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {customer.lastVisit 
+                            ? format(customer.lastVisit, "dd/MM/yyyy")
+                            : "Jamais"
+                          }
+                        </TableCell>
                         <TableCell className="text-right">
                           <Badge variant={customer.current_credit > 0 ? "destructive" : "secondary"}>
                             {formatCurrency(customer.current_credit || 0, currency)}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(customer.credit_limit || 0, currency)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
