@@ -24,22 +24,29 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [ifu, setIfu] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+      } else if (session && !isPasswordRecovery) {
         navigate("/dashboard");
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && !isPasswordRecovery) {
         navigate("/dashboard");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isPasswordRecovery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,6 +190,39 @@ const Auth = () => {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (!newPassword || newPassword.length < 6) {
+        toast.error("Le mot de passe doit contenir au moins 6 caractères");
+        setIsLoading(false);
+        return;
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        toast.error("Les mots de passe ne correspondent pas");
+        setIsLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success("Mot de passe mis à jour avec succès !");
+      setIsPasswordRecovery(false);
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error(error.message || "Une erreur est survenue");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4 relative">
       <Button
@@ -204,7 +244,9 @@ const Auth = () => {
               Africaisse
             </CardTitle>
             <CardDescription className="text-base mt-2">
-              {isForgotPassword 
+              {isPasswordRecovery
+                ? "Créer un nouveau mot de passe"
+                : isForgotPassword 
                 ? "Réinitialiser votre mot de passe" 
                 : isSignUp 
                 ? "Créer un nouveau compte - 30 jours gratuits" 
@@ -221,6 +263,62 @@ const Auth = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {isPasswordRecovery ? (
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nouveau mot de passe *</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    className="border-2 pr-10"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmNewPassword">Confirmer le nouveau mot de passe *</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmNewPassword"
+                    type={showConfirmNewPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    required
+                    className="border-2 pr-10"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                disabled={isLoading}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Mettre à jour le mot de passe
+              </Button>
+            </form>
+          ) : (
           <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-4">
             {!isForgotPassword && isSignUp && (
               <>
@@ -346,6 +444,8 @@ const Auth = () => {
                 : "Se connecter"}
             </Button>
           </form>
+          )}
+          {!isPasswordRecovery && (
           <div className="mt-6 space-y-3 text-center">
             {!isForgotPassword && !isSignUp && (
               <button
@@ -371,6 +471,7 @@ const Auth = () => {
                 : "Pas de compte ? Inscrivez-vous"}
             </button>
           </div>
+          )}
         </CardContent>
       </Card>
     </div>
