@@ -31,22 +31,33 @@ const Auth = () => {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   useEffect(() => {
+    // Check if this is a password recovery flow from URL hash
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const isRecoveryFlow = hashParams.get('type') === 'recovery';
+    
+    if (isRecoveryFlow) {
+      setIsPasswordRecovery(true);
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsPasswordRecovery(true);
-      } else if (session && !isPasswordRecovery) {
+      } else if (event === "SIGNED_IN" && !isRecoveryFlow && !isPasswordRecovery) {
         navigate("/dashboard");
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && !isPasswordRecovery) {
-        navigate("/dashboard");
-      }
-    });
+    // Only check session if not in recovery flow
+    if (!isRecoveryFlow) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          navigate("/dashboard");
+        }
+      });
+    }
 
     return () => subscription.unsubscribe();
-  }, [navigate, isPasswordRecovery]);
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
