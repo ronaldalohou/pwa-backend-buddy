@@ -37,10 +37,13 @@ const Admin = () => {
     activeSubscriptions: 0,
     expiredSubscriptions: 0,
     trialUsers: 0,
+    cancelledSubscriptions: 0,
   });
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedUserForCancel, setSelectedUserForCancel] = useState<AdminUser | null>(null);
   const [renewalDays, setRenewalDays] = useState("30");
   const [isRenewing, setIsRenewing] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -100,12 +103,14 @@ const Admin = () => {
       const active = usersData.filter((u) => u.subscription_status === "active" || u.subscription_status === "trial").length;
       const expired = usersData.filter((u) => u.subscription_status === "expired").length;
       const trial = usersData.filter((u) => u.is_trial).length;
+      const cancelled = usersData.filter((u) => u.subscription_status === "cancelled").length;
 
       setStats({
         totalUsers: usersData.length,
         activeSubscriptions: active,
         expiredSubscriptions: expired,
         trialUsers: trial,
+        cancelledSubscriptions: cancelled,
       });
     } catch (error: any) {
       console.error("Error loading users:", error);
@@ -152,7 +157,35 @@ const Admin = () => {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    if (!selectedUserForCancel) return;
+
+    setIsCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({
+          status: "cancelled",
+        })
+        .eq("user_id", selectedUserForCancel.id);
+
+      if (error) throw error;
+
+      toast.success("Abonnement annulé avec succès");
+      setSelectedUserForCancel(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      toast.error("Erreur lors de l'annulation");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const getStatusBadge = (status: string, daysRemaining: number) => {
+    if (status === "cancelled") {
+      return <Badge variant="outline" className="bg-muted">Annulé</Badge>;
+    }
     if (status === "expired") {
       return <Badge variant="destructive">Expiré</Badge>;
     }
@@ -201,7 +234,7 @@ const Admin = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -247,6 +280,18 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">{stats.trialUsers}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                Annulés
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">{stats.cancelledSubscriptions}</div>
             </CardContent>
           </Card>
         </div>
@@ -299,50 +344,102 @@ const Admin = () => {
                             : "N/A"}
                         </TableCell>
                         <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setSelectedUser(user)}
-                              >
-                                Renouveler
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Renouveler l'abonnement</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                  <p className="text-sm">
-                                    <strong>Client:</strong> {selectedUser?.full_name}
-                                  </p>
-                                  <p className="text-sm">
-                                    <strong>Commerce:</strong> {selectedUser?.business_name}
-                                  </p>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="days">Nombre de jours</Label>
-                                  <Input
-                                    id="days"
-                                    type="number"
-                                    min="1"
-                                    value={renewalDays}
-                                    onChange={(e) => setRenewalDays(e.target.value)}
-                                  />
-                                </div>
+                          <div className="flex gap-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
                                 <Button
-                                  onClick={handleRenewSubscription}
-                                  className="w-full"
-                                  disabled={isRenewing}
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setSelectedUser(user)}
                                 >
-                                  {isRenewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                  Confirmer le renouvellement
+                                  Renouveler
                                 </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Renouveler l'abonnement</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <div className="space-y-2">
+                                    <p className="text-sm">
+                                      <strong>Client:</strong> {selectedUser?.full_name}
+                                    </p>
+                                    <p className="text-sm">
+                                      <strong>Commerce:</strong> {selectedUser?.business_name}
+                                    </p>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="days">Nombre de jours</Label>
+                                    <Input
+                                      id="days"
+                                      type="number"
+                                      min="1"
+                                      value={renewalDays}
+                                      onChange={(e) => setRenewalDays(e.target.value)}
+                                    />
+                                  </div>
+                                  <Button
+                                    onClick={handleRenewSubscription}
+                                    className="w-full"
+                                    disabled={isRenewing}
+                                  >
+                                    {isRenewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    Confirmer le renouvellement
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            
+                            {user.subscription_status !== "cancelled" && user.subscription_status !== "none" && (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => setSelectedUserForCancel(user)}
+                                  >
+                                    Annuler
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Annuler l'abonnement</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                      <p className="text-sm">
+                                        <strong>Client:</strong> {selectedUserForCancel?.full_name}
+                                      </p>
+                                      <p className="text-sm">
+                                        <strong>Commerce:</strong> {selectedUserForCancel?.business_name}
+                                      </p>
+                                      <p className="text-sm text-destructive mt-4">
+                                        ⚠️ Cette action annulera immédiatement l'abonnement du client.
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() => setSelectedUserForCancel(null)}
+                                      >
+                                        Annuler
+                                      </Button>
+                                      <Button
+                                        variant="destructive"
+                                        className="flex-1"
+                                        onClick={handleCancelSubscription}
+                                        disabled={isCancelling}
+                                      >
+                                        {isCancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                        Confirmer l'annulation
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
