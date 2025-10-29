@@ -22,6 +22,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [ifu, setIfu] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
@@ -73,6 +74,7 @@ const Auth = () => {
           fullName,
           businessName,
           phone,
+          whatsapp,
           ifu,
         });
 
@@ -91,6 +93,7 @@ const Auth = () => {
               full_name: validationResult.data.fullName,
               business_name: validationResult.data.businessName,
               phone: validationResult.data.phone,
+              whatsapp: validationResult.data.whatsapp,
               ifu: validationResult.data.ifu || null,
             },
             emailRedirectTo: `${window.location.origin}/dashboard`,
@@ -260,7 +263,7 @@ const Auth = () => {
                 : isForgotPassword 
                 ? "Réinitialiser votre mot de passe" 
                 : isSignUp 
-                ? "Créer un nouveau compte - 30 jours gratuits" 
+                ? "Commencez gratuitement - Essai 30 jours" 
                 : "Connectez-vous à votre compte"}
             </CardDescription>
             {isSignUp && (
@@ -362,9 +365,21 @@ const Auth = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+229 XX XX XX XX"
+                    placeholder="+229 ou +225 XX XX XX XX"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    required
+                    className="border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">Numéro WhatsApp (pour support) *</Label>
+                  <Input
+                    id="whatsapp"
+                    type="tel"
+                    placeholder="+229 ou +225 XX XX XX XX"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
                     required
                     className="border-2"
                   />
@@ -451,7 +466,7 @@ const Auth = () => {
               {isForgotPassword 
                 ? "Envoyer le lien de réinitialisation" 
                 : isSignUp 
-                ? "Créer un compte" 
+                ? "Commencer gratuitement" 
                 : "Se connecter"}
             </Button>
           </form>
@@ -467,20 +482,24 @@ const Auth = () => {
                 Mot de passe oublié ?
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setIsForgotPassword(false);
-              }}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isForgotPassword
-                ? "Retour à la connexion"
-                : isSignUp
-                ? "Vous avez déjà un compte ? Connectez-vous"
-                : "Pas de compte ? Inscrivez-vous"}
-            </button>
+            {!isForgotPassword && isSignUp && (
+              <button
+                type="button"
+                onClick={() => setIsSignUp(false)}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Vous avez déjà un compte ? Connectez-vous
+              </button>
+            )}
+            {isForgotPassword && (
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(false)}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Retour à la connexion
+              </button>
+            )}
           </div>
           )}
         </CardContent>
