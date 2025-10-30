@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSidebar } from "@/components/ui/sidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Menu, ArrowLeft, Plus, Search, Package, AlertTriangle, Trash2, Boxes, Building2, Phone, Mail, User, Tag, TrendingUp, TrendingDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -381,11 +382,12 @@ const Products = () => {
                     Nouveau Produit
                   </Button>
                 </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Ajouter un nouveau produit/service</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2 col-span-2">
                     <Label>Type *</Label>
@@ -498,6 +500,7 @@ const Products = () => {
                   Ajouter le produit
                 </Button>
                 </form>
+              </ScrollArea>
               </DialogContent>
             </Dialog>
             </div>
@@ -618,11 +621,12 @@ const Products = () => {
                     Ajouter un fournisseur
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md max-h-[90vh]">
                   <DialogHeader>
                     <DialogTitle>Nouveau fournisseur</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleSupplierSubmit} className="space-y-4">
+                  <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+                    <form onSubmit={handleSupplierSubmit} className="space-y-4">
                     <div>
                       <Label htmlFor="supplier-name">Nom du fournisseur *</Label>
                       <Input
@@ -678,6 +682,7 @@ const Products = () => {
                     </div>
                     <Button type="submit" className="w-full">Ajouter</Button>
                   </form>
+                  </ScrollArea>
                 </DialogContent>
               </Dialog>
             </div>
@@ -750,11 +755,12 @@ const Products = () => {
                     Nouveau Mouvement
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh]">
                   <DialogHeader>
                     <DialogTitle>Enregistrer un mouvement de stock</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleMovementSubmit} className="space-y-4">
+                  <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+                    <form onSubmit={handleMovementSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label>Produit *</Label>
                       <Select
@@ -813,6 +819,7 @@ const Products = () => {
                       Enregistrer
                     </Button>
                   </form>
+                  </ScrollArea>
                 </DialogContent>
               </Dialog>
             </div>

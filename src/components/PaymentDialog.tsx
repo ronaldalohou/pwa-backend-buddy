@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaymentMethod, PAYMENT_METHODS, formatCurrency, CurrencyCode } from "@/utils/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
@@ -71,12 +72,13 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Paiement de la vente</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+          <div className="space-y-6">
           {/* Total */}
           <div className="bg-primary/10 p-4 rounded-lg text-center">
             <p className="text-sm text-muted-foreground mb-1">Montant total</p>
@@ -209,6 +211,7 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
             </Button>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
