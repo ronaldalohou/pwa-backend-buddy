@@ -17,6 +17,7 @@ interface AdminUser {
   full_name: string;
   business_name: string;
   phone: string;
+  whatsapp: string;
   email: string;
   user_created_at: string;
   subscription_status: string;
@@ -87,9 +88,10 @@ const Admin = () => {
           full_name: profile.full_name || "N/A",
           business_name: profile.business_name || "N/A",
           phone: profile.phone || "N/A",
-          email: "Chargement...",
+          whatsapp: profile.whatsapp || "N/A",
+          email: "Non disponible",
           user_created_at: profile.created_at,
-          subscription_status: subscription?.status || "none",
+          subscription_status: subscription?.status || "trial",
           is_trial: subscription?.is_trial || false,
           subscription_start: subscription?.start_date || "",
           subscription_end: subscription?.end_date || "",
@@ -184,7 +186,7 @@ const Admin = () => {
 
   const getStatusBadge = (status: string, daysRemaining: number) => {
     if (status === "cancelled") {
-      return <Badge variant="outline" className="bg-muted">Annulé</Badge>;
+      return <Badge variant="outline" className="bg-muted">Bloqué</Badge>;
     }
     if (status === "expired") {
       return <Badge variant="destructive">Expiré</Badge>;
@@ -195,7 +197,7 @@ const Admin = () => {
     if (status === "active") {
       return <Badge variant="default" className="bg-secondary">Actif ({daysRemaining}j)</Badge>;
     }
-    return <Badge variant="secondary">Aucun</Badge>;
+    return <Badge variant="default">Essai ({daysRemaining}j)</Badge>;
   };
 
   const filteredUsers = users.filter((user) =>
@@ -324,6 +326,7 @@ const Admin = () => {
                       <TableHead>Nom complet</TableHead>
                       <TableHead>Commerce</TableHead>
                       <TableHead>Téléphone</TableHead>
+                      <TableHead>WhatsApp</TableHead>
                       <TableHead>Inscription</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead>Expiration</TableHead>
@@ -336,12 +339,13 @@ const Admin = () => {
                         <TableCell className="font-medium">{user.full_name}</TableCell>
                         <TableCell>{user.business_name}</TableCell>
                         <TableCell>{user.phone}</TableCell>
+                        <TableCell>{user.whatsapp}</TableCell>
                         <TableCell>{new Date(user.user_created_at).toLocaleDateString("fr-FR")}</TableCell>
                         <TableCell>{getStatusBadge(user.subscription_status, user.days_remaining)}</TableCell>
                         <TableCell>
                           {user.subscription_end
                             ? new Date(user.subscription_end).toLocaleDateString("fr-FR")
-                            : "N/A"}
+                            : "En cours"}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -390,7 +394,7 @@ const Admin = () => {
                               </DialogContent>
                             </Dialog>
                             
-                            {user.subscription_status !== "cancelled" && user.subscription_status !== "none" && (
+                            {user.subscription_status !== "cancelled" && (
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button
@@ -398,12 +402,12 @@ const Admin = () => {
                                     variant="destructive"
                                     onClick={() => setSelectedUserForCancel(user)}
                                   >
-                                    Annuler
+                                    Bloquer
                                   </Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                   <DialogHeader>
-                                    <DialogTitle>Annuler l'abonnement</DialogTitle>
+                                    <DialogTitle>Bloquer l'accès au compte</DialogTitle>
                                   </DialogHeader>
                                   <div className="space-y-4 py-4">
                                     <div className="space-y-2">
@@ -414,7 +418,7 @@ const Admin = () => {
                                         <strong>Commerce:</strong> {selectedUserForCancel?.business_name}
                                       </p>
                                       <p className="text-sm text-destructive mt-4">
-                                        ⚠️ Cette action annulera immédiatement l'abonnement du client.
+                                        ⚠️ Cette action bloquera immédiatement l'accès au compte du client.
                                       </p>
                                     </div>
                                     <div className="flex gap-2">
@@ -432,7 +436,7 @@ const Admin = () => {
                                         disabled={isCancelling}
                                       >
                                         {isCancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                        Confirmer l'annulation
+                                        Confirmer le blocage
                                       </Button>
                                     </div>
                                   </div>
