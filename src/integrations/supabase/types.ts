@@ -661,6 +661,7 @@ export type Database = {
         | "orange_money"
         | "credit"
         | "card"
+        | "wave"
       payment_status_type: "completed" | "pending" | "partial" | "credit"
       user_role: "caissier" | "manager" | "admin"
     }
@@ -799,6 +800,7 @@ export const Constants = {
         "orange_money",
         "credit",
         "card",
+        "wave",
       ],
       payment_status_type: ["completed", "pending", "partial", "credit"],
       user_role: ["caissier", "manager", "admin"],
