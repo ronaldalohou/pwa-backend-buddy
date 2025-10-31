@@ -27,12 +27,17 @@ export function parseCurrency(value: string): number {
 
 export const PAYMENT_METHODS = {
   cash: { name: 'Espèces', icon: '💵' },
-  mtn_money: { name: 'MTN Mobile Money', icon: '📱' },
-  moov_money: { name: 'Moov Money', icon: '📱' },
-  orange_money: { name: 'Orange Money', icon: '📱' },
-  wave: { name: 'Wave', icon: '🌊' },
+  mobile_money: { name: 'Mobile Money', icon: '📱' },
   credit: { name: 'Crédit Client', icon: '💳' },
   card: { name: 'Carte Bancaire', icon: '💳' },
 };
 
+export const MOBILE_MONEY_PROVIDERS = {
+  mtn_money: { name: 'MTN Mobile Money', icon: '📱' },
+  moov_money: { name: 'Moov Money', icon: '📱' },
+  orange_money: { name: 'Orange Money', icon: '📱' },
+  wave: { name: 'Wave', icon: '📱' },
+};
+
 export type PaymentMethod = keyof typeof PAYMENT_METHODS;
+export type MobileMoneyProvider = keyof typeof MOBILE_MONEY_PROVIDERS;

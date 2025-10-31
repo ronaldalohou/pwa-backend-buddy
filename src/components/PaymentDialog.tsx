@@ -6,9 +6,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PaymentMethod, PAYMENT_METHODS, formatCurrency, CurrencyCode } from "@/utils/currency";
+import { PaymentMethod, PAYMENT_METHODS, MOBILE_MONEY_PROVIDERS, MobileMoneyProvider, formatCurrency, CurrencyCode } from "@/utils/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -17,12 +17,13 @@ interface PaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   total: number;
   currency: CurrencyCode;
-  onConfirm: (paymentMethod: PaymentMethod, customerId?: string, amountPaid?: number) => void;
+  onConfirm: (paymentMethod: PaymentMethod | MobileMoneyProvider, customerId?: string, amountPaid?: number) => void;
   customers: any[];
 }
 
 export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, customers }: PaymentDialogProps) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [mobileMoneyProvider, setMobileMoneyProvider] = useState<MobileMoneyProvider>("mtn_money");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [amountPaid, setAmountPaid] = useState<string>(total.toString());
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
@@ -65,7 +66,8 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
 
   const handleConfirm = () => {
     const paid = parseFloat(amountPaid) || 0;
-    onConfirm(paymentMethod, selectedCustomer || undefined, paid);
+    const finalPaymentMethod = paymentMethod === "mobile_money" ? mobileMoneyProvider : paymentMethod;
+    onConfirm(finalPaymentMethod, selectedCustomer || undefined, paid);
   };
 
   const change = parseFloat(amountPaid) - total;
@@ -93,13 +95,39 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
                 <div key={key} className="flex items-center space-x-2 border rounded-lg p-2 hover:bg-accent cursor-pointer">
                   <RadioGroupItem value={key} id={key} />
                   <Label htmlFor={key} className="flex-1 cursor-pointer flex items-center gap-2 text-sm">
-                    <span className="text-lg">{method.icon}</span>
+                    {key === "mobile_money" ? (
+                      <Smartphone className="w-4 h-4" />
+                    ) : (
+                      <span className="text-lg">{method.icon}</span>
+                    )}
                     <span>{method.name}</span>
                   </Label>
                 </div>
               ))}
             </RadioGroup>
           </div>
+
+          {/* Mobile Money Provider Selection */}
+          {paymentMethod === "mobile_money" && (
+            <div className="space-y-2">
+              <Label className="text-sm">Fournisseur Mobile Money</Label>
+              <Select value={mobileMoneyProvider} onValueChange={(value) => setMobileMoneyProvider(value as MobileMoneyProvider)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(MOBILE_MONEY_PROVIDERS).map(([key, provider]) => (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        <Smartphone className="w-4 h-4" />
+                        {provider.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Customer selection for credit */}
           {paymentMethod === "credit" && (
