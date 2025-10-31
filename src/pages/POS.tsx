@@ -152,7 +152,6 @@ const POS = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
 
-      const saleNumber = `SALE-${Date.now().toString().slice(-6)}`;
       const isCredit = paymentMethod === "credit";
       const paid = amountPaid || (isCredit ? 0 : total);
       const remaining = total - paid;
@@ -160,7 +159,6 @@ const POS = () => {
       const { data: sale, error: saleError } = await supabase
         .from("sales")
         .insert({
-          sale_number: saleNumber,
           cashier_id: user.id,
           customer_id: customerId || null,
           subtotal: total,
@@ -169,7 +167,7 @@ const POS = () => {
           payment_status: isCredit ? "credit" : (remaining > 0 ? "partial" : "completed"),
           amount_paid: paid,
           amount_remaining: remaining,
-        })
+        } as any)
         .select()
         .single();
 
@@ -203,7 +201,7 @@ const POS = () => {
       // Generate PDF
       const customer = customers.find(c => c.id === customerId);
       const pdf = generateInvoicePDF({
-        saleNumber,
+        saleNumber: sale.sale_number,
         date: new Date(),
         items: cart.map(item => ({
           name: item.name,
@@ -222,9 +220,9 @@ const POS = () => {
         customerName: customer?.name,
       });
 
-      pdf.save(`Facture_${saleNumber}.pdf`);
+      pdf.save(`Facture_${sale.sale_number}.pdf`);
 
-      toast.success(`Vente ${saleNumber} enregistrée avec succès ! Facture PDF générée.`);
+      toast.success(`Vente ${sale.sale_number} enregistrée avec succès ! Facture PDF générée.`);
       setCart([]);
       loadProducts();
     } catch (error: any) {
