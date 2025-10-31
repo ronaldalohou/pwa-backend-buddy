@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaymentMethod, PAYMENT_METHODS, MOBILE_MONEY_PROVIDERS, MobileMoneyProvider, formatCurrency, CurrencyCode } from "@/utils/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Smartphone } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -95,11 +95,7 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
                 <div key={key} className="flex items-center space-x-2 border rounded-lg p-2 hover:bg-accent cursor-pointer">
                   <RadioGroupItem value={key} id={key} />
                   <Label htmlFor={key} className="flex-1 cursor-pointer flex items-center gap-2 text-sm">
-                    {key === "mobile_money" ? (
-                      <Smartphone className="w-4 h-4" />
-                    ) : (
-                      <span className="text-lg">{method.icon}</span>
-                    )}
+                    <span className="text-lg">{method.icon}</span>
                     <span>{method.name}</span>
                   </Label>
                 </div>
@@ -118,10 +114,7 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
                 <SelectContent>
                   {Object.entries(MOBILE_MONEY_PROVIDERS).map(([key, provider]) => (
                     <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
-                        <Smartphone className="w-4 h-4" />
-                        {provider.name}
-                      </span>
+                      {provider.icon} {provider.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
