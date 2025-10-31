@@ -80,20 +80,20 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
         <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
           <div className="space-y-6">
           {/* Total */}
-          <div className="bg-primary/10 p-4 rounded-lg text-center">
-            <p className="text-sm text-muted-foreground mb-1">Montant total</p>
-            <p className="text-3xl font-bold text-primary">{formatCurrency(total, currency)}</p>
+          <div className="bg-primary/10 p-3 rounded-lg text-center">
+            <p className="text-xs text-muted-foreground mb-1">Montant total</p>
+            <p className="text-2xl font-bold text-primary">{formatCurrency(total, currency)}</p>
           </div>
 
           {/* Payment Method */}
-          <div className="space-y-3">
-            <Label>Méthode de paiement</Label>
+          <div className="space-y-2">
+            <Label className="text-sm">Méthode de paiement</Label>
             <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}>
               {Object.entries(PAYMENT_METHODS).map(([key, method]) => (
-                <div key={key} className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                <div key={key} className="flex items-center space-x-2 border rounded-lg p-2 hover:bg-accent cursor-pointer">
                   <RadioGroupItem value={key} id={key} />
-                  <Label htmlFor={key} className="flex-1 cursor-pointer flex items-center gap-2">
-                    <span className="text-xl">{method.icon}</span>
+                  <Label htmlFor={key} className="flex-1 cursor-pointer flex items-center gap-2 text-sm">
+                    <span className="text-lg">{method.icon}</span>
                     <span>{method.name}</span>
                   </Label>
                 </div>
@@ -103,8 +103,8 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
 
           {/* Customer selection for credit */}
           {paymentMethod === "credit" && (
-            <div className="space-y-3">
-              <Label>Client (obligatoire pour crédit)</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Client (obligatoire pour crédit)</Label>
               {!showNewCustomerForm ? (
                 <>
                   <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
@@ -179,7 +179,7 @@ export const PaymentDialog = ({ open, onOpenChange, total, currency, onConfirm, 
           {/* Amount paid for cash */}
           {paymentMethod === "cash" && (
             <div className="space-y-2">
-              <Label>Montant reçu</Label>
+              <Label className="text-sm">Montant reçu</Label>
               <Input
                 type="number"
                 value={amountPaid}

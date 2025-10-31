@@ -30,6 +30,7 @@ export const PAYMENT_METHODS = {
   mtn_money: { name: 'MTN Mobile Money', icon: '📱' },
   moov_money: { name: 'Moov Money', icon: '📱' },
   orange_money: { name: 'Orange Money', icon: '📱' },
+  wave: { name: 'Wave', icon: '🌊' },
   credit: { name: 'Crédit Client', icon: '💳' },
   card: { name: 'Carte Bancaire', icon: '💳' },
 };
