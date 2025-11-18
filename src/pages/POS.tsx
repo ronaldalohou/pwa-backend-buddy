@@ -156,9 +156,16 @@ const POS = () => {
       const paid = amountPaid || (isCredit ? 0 : total);
       const remaining = total - paid;
 
+      // Generate sale number
+      const { data: saleNumber, error: saleNumberError } = await supabase
+        .rpc('generate_sale_number');
+      
+      if (saleNumberError) throw saleNumberError;
+
       const { data: sale, error: saleError } = await supabase
         .from("sales")
         .insert({
+          sale_number: saleNumber,
           cashier_id: user.id,
           customer_id: customerId || null,
           subtotal: total,
