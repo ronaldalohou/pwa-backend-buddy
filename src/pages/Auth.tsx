@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { signUpSchema, signInSchema } from "@/lib/validations";
@@ -21,7 +22,9 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [phonePrefix, setPhonePrefix] = useState("+229");
   const [phone, setPhone] = useState("");
+  const [whatsappPrefix, setWhatsappPrefix] = useState("+229");
   const [whatsapp, setWhatsapp] = useState("");
   const [ifu, setIfu] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -66,6 +69,10 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
+        // Combine prefix and phone numbers
+        const fullPhone = phonePrefix + phone;
+        const fullWhatsapp = whatsappPrefix + whatsapp;
+        
         // Validate signup data
         const validationResult = signUpSchema.safeParse({
           email,
@@ -73,8 +80,8 @@ const Auth = () => {
           confirmPassword,
           fullName,
           businessName,
-          phone,
-          whatsapp,
+          phone: fullPhone,
+          whatsapp: fullWhatsapp,
           ifu,
         });
 
@@ -362,27 +369,61 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Numéro de téléphone *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+221, +228, +229, +241, +225 XX XX XX XX"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    className="border-2"
-                  />
+                  <div className="flex gap-2">
+                    <Select value={phonePrefix} onValueChange={setPhonePrefix}>
+                      <SelectTrigger className="w-[120px] border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-border z-50">
+                        <SelectItem value="+229">🇧🇯 +229</SelectItem>
+                        <SelectItem value="+221">🇸🇳 +221</SelectItem>
+                        <SelectItem value="+228">🇹🇬 +228</SelectItem>
+                        <SelectItem value="+241">🇬🇦 +241</SelectItem>
+                        <SelectItem value="+225">🇨🇮 +225</SelectItem>
+                        <SelectItem value="+223">🇲🇱 +223</SelectItem>
+                        <SelectItem value="+226">🇧🇫 +226</SelectItem>
+                        <SelectItem value="+227">🇳🇪 +227</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="771234567"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      className="border-2 flex-1"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp">Numéro WhatsApp (pour support) *</Label>
-                  <Input
-                    id="whatsapp"
-                    type="tel"
-                    placeholder="+221, +228, +229, +241, +225 XX XX XX XX"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    required
-                    className="border-2"
-                  />
+                  <div className="flex gap-2">
+                    <Select value={whatsappPrefix} onValueChange={setWhatsappPrefix}>
+                      <SelectTrigger className="w-[120px] border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-border z-50">
+                        <SelectItem value="+229">🇧🇯 +229</SelectItem>
+                        <SelectItem value="+221">🇸🇳 +221</SelectItem>
+                        <SelectItem value="+228">🇹🇬 +228</SelectItem>
+                        <SelectItem value="+241">🇬🇦 +241</SelectItem>
+                        <SelectItem value="+225">🇨🇮 +225</SelectItem>
+                        <SelectItem value="+223">🇲🇱 +223</SelectItem>
+                        <SelectItem value="+226">🇧🇫 +226</SelectItem>
+                        <SelectItem value="+227">🇳🇪 +227</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="whatsapp"
+                      type="tel"
+                      placeholder="771234567"
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      required
+                      className="border-2 flex-1"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ifu">IFU</Label>
