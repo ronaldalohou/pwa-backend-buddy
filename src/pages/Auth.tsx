@@ -341,7 +341,7 @@ const Auth = () => {
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Jean Dupont"
+                    placeholder="Koffi Tossou"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -365,7 +365,7 @@ const Auth = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+229 ou +225 XX XX XX XX"
+                    placeholder="+221, +228, +229, +241, +225 XX XX XX XX"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -377,7 +377,7 @@ const Auth = () => {
                   <Input
                     id="whatsapp"
                     type="tel"
-                    placeholder="+229 ou +225 XX XX XX XX"
+                    placeholder="+221, +228, +229, +241, +225 XX XX XX XX"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
                     required
