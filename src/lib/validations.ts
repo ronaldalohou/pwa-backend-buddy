@@ -29,12 +29,12 @@ export const signUpSchema = z.object({
     .string()
     .trim()
     .min(1, "Le téléphone est requis")
-    .regex(/^(\+?(?:229|225)[\s]?)0[1-9][\s]?\d{2}[\s]?\d{2}[\s]?\d{2}[\s]?\d{2}$/, "Le format doit être : +229 ou +225 suivi de 01 XX XX XX XX"),
+    .regex(/^\+\d{1,4}\s?\d{7,15}$/, "Le format doit être : +[code pays] suivi du numéro (ex: +221 771234567)"),
   whatsapp: z
     .string()
     .trim()
     .min(1, "Le numéro WhatsApp est requis")
-    .regex(/^(\+?(?:229|225)[\s]?)0[1-9][\s]?\d{2}[\s]?\d{2}[\s]?\d{2}[\s]?\d{2}$/, "Le format WhatsApp doit être : +229 ou +225 suivi de 01 XX XX XX XX"),
+    .regex(/^\+\d{1,4}\s?\d{7,15}$/, "Le format WhatsApp doit être : +[code pays] suivi du numéro (ex: +221 771234567)"),
   ifu: z
     .string()
     .trim()
